@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="imgs/logo.png" alt="DevWhale" width="100%" />
+  <img src="imgs/logo.png" alt="DevWhale" width="108%" />
 </p>
 
 <h1 align="center">DevWhale</h1>
