@@ -1,10 +1,22 @@
-# DevWhale
+<p align="center">
+  <img src="build/icon.png" width="128" alt="DevWhale" />
+</p>
 
-> AI 驱动的桌面开发工作台 — Electron 36 + React 19 + TypeScript 6
+<h1 align="center">DevWhale</h1>
+<p align="center"><strong>AI 驱动的桌面开发工作台</strong> — 对标 Cursor / Trae Solo</p>
 
-DevWhale 是一个轻量级的 AI 编程助手桌面应用，对标 Cursor / Trae Solo。三栏布局、流式对话、Monaco 代码编辑器（支持 AI Ghost Text 补全和 LSP 诊断）、xterm.js 终端（含内置 V8 调试器）、文件树（VSCode 风格）、检查点回滚、Skill 市场，全部本地运行。AI 引擎支持流式 Tool Calling，可读/写/编辑/Git 操作/Web 搜索/应用补丁/创建 Word 文档，三种执行模式（YOLO 全自动 / Ask 每步确认 / Plan 先计划后执行）。拖放支持 65+ 文件格式，DOCX/XLSX 自动解压提取文本，图片转 base64 多模态输入。
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/electron-36-47848f?logo=electron" alt="Electron" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/react-19-61dafb?logo=react" alt="React" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/typescript-6-3178c6?logo=typescript" alt="TypeScript" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/tailwind-4-06b6d4?logo=tailwindcss" alt="Tailwind" /></a>
+</p>
 
-![DevWhale](screenshot.png)
+---
+
+DevWhale 是一个轻量级的 AI 编程助手桌面应用。三栏布局、流式对话、Monaco 代码编辑器（AI Ghost Text 补全 + LSP 诊断）、xterm.js 终端（内置 V8 调试器）、VSCode 风格文件树、检查点一键回滚、Skill 市场。AI 引擎支持流式 Tool Calling，可读/写/编辑/Git 操作/Web 搜索/应用补丁/创建 Word 文档。三种执行模式（YOLO 全自动 / Ask 每步确认 / Plan 先计划后执行）。拖放支持 65+ 文件格式，DOCX/XLSX 自动解压提取文本，图片转 base64 多模态输入。
 
 ---
 
@@ -20,7 +32,7 @@ DevWhale 是一个轻量级的 AI 编程助手桌面应用，对标 Cursor / Tra
 
 ### 辅助系统
 - 🌓 **日/夜主题** — 跟随系统自动切换，或手动切换亮色/暗色，使用 CSS 变量 + Tailwind token 体系
-- 📋 **规则与记忆** — 设定 AI 行为准则（支持多条规则开关），跨会话记住事实。自动读取项目级规则文件（.bobdesk/rules.md、AGENTS.md、CLAUDE.md、.cursorrules）
+- 📋 **规则与记忆** — 设定 AI 行为准则（支持多条规则开关），跨会话记住事实。自动读取项目级规则文件（.devwhale/rules.md、AGENTS.md、CLAUDE.md、.cursorrules）
 - 🔙 **检查点回滚** — 文件写入/编辑前自动备份，右侧面板随时回滚到之前的版本，支持多文件追踪
 - 🔍 **语义索引** — 自动分析项目 import/export 依赖图和关键符号表，注入 system prompt 帮助 AI 理解项目结构
 - 🛠️ **技能系统** — 内置 12 个专家 Skill（代码审查/测试生成/文档编写/性能优化/安全审计等），支持从 SkillsMP 市场搜索安装社区 Skill
@@ -219,8 +231,6 @@ npm run build
 # 打包为可分发安装包
 npm run electron:build
 ```
-
----
 
 ---
 
