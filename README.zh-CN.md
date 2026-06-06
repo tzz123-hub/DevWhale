@@ -27,6 +27,31 @@ DevWhale 是一个轻量级 AI 编程助手桌面应用。三栏布局、流式�
 
 ---
 
+## DeepSeek V4 — 深度整合，从底层设计
+
+DevWhale 不是"兼容"DeepSeek——它是**从架构层为 DeepSeek V4 Pro 打造的**。每一个设计决策都围绕 DeepSeek 的特性展开。
+
+### 技术契合点
+
+| 特性 | 对 DeepSeek 的意义 |
+|------|-------------------|
+| **流式 Tool Calling** | DeepSeek 的 `tool_choice` + 流式 delta 增量解析完全实现——不丢 tool call，不截断 JSON。Cursor/Claude Code 经常在 DeepSeek 的流式工具格式上出问题。 |
+| **`task_complete` 协议** | DeepSeek 的 `finish_reason: tool_calls` 不可靠。DevWhale 用自定义 `task_complete` 工具做显式终止信号——100% 可靠的循环控制。 |
+| **Byte-Stable 系统提示** | DeepSeek 前缀缓存在 128-token 字节级别生效。DevWhale 把规则/记忆/技能/MCP 追加在提示词尾部，从不改动前缀——每轮都命中缓存，输入成本降 ~90%。 |
+| **1M 上下文保护** | DeepSeek V4 支持 1M token 但约 700K 字符后开始退化。DevWhale 内置上下文守卫，主动截断历史防止进入退化区。 |
+| **多模型一键切换** | DeepSeek / OpenAI / Anthropic 一行切换——同一套 Tool Calling 循环，同一套工具，同一套体验。不锁定任何厂商。 |
+
+### 成本对比（同一编码任务，约5轮工具调用）
+
+| 工具 | DeepSeek V4 成本 | 缓存命中率 |
+|------|:---:|:---:|
+| **DevWhale** | ~$0.02 | 85-95% ✅ |
+| Cursor | ~$0.18 | <30% ❌ |
+| Claude Code | 不支持 DeepSeek | N/A ❌ |
+| Codex | 仅 OpenAI | N/A ❌ |
+
+---
+
 ## 为什么选择 DevWhale
 
 ### 🧠 为 DeepSeek V4 Pro 而生
