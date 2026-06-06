@@ -234,6 +234,26 @@ npm run electron:build
 
 ---
 
+## 为什么选择 DevWhale
+
+### 🧠 DeepSeek V4 Pro 原生适配
+
+**Codex 只能接 OpenAI，Claude Code 只能接 Anthropic。** 它们对 DeepSeek 的 Tool Calling 格式、流式响应、系统提示词注入方式兼容性极差，经常出现工具调用失败、上下文丢失、128K 以上退化严重。
+
+DevWhale **从第一行代码就为 DeepSeek V4 Pro 设计**——完整的 Tool Calling 循环、`task_complete` 终止协议、700K 字符上下文保护、Multi-model Router 一行切换，DeepSeek/OpenAI/Anthropic 三模通用。
+
+### 💰 前缀缓存优化，成本直降 90%
+
+DeepSeek V4 对 **128-token 粒度** 的 byte-stable 前缀提供 ~90% 缓存折扣。DevWhale 的 Agent 引擎刻意保持 system prompt 前缀稳定——规则、记忆、技能、项目索引、MCP 工具列表全部前置且只追加不删改——确保每一轮对话都命中缓存，**同样的代码审查任务，单次 API 成本是 Cursor 的 1/10**。
+
+Cursor 和 Claude Code 的提示词结构频繁变动（每次 tool call 插入不同位置），缓存命中率极低。Codex 完全绑死 OpenAI，不打 DeepSeek 缓存策略。
+
+### 🖥️ 独立桌面应用，不是 IDE 插件
+
+不像 Cursor（VSCode 魔改）或 Claude Code（终端 CLI），DevWhale 是 **Electron 原生桌面应用**——双击即用，自带 Monaco + xterm + 文件树，不依赖任何 IDE。适合不愿换编辑器的开发者，也适合非技术用户。
+
+---
+
 ## vs Codex / Cursor / Claude Code / Trae Solo
 
 | 维度 | DevWhale | Codex (OpenAI) | Cursor | Claude Code | Trae Solo |
@@ -243,7 +263,9 @@ npm run electron:build
 | **GUI** | 三栏布局 + Monaco + xterm | 无（纯文本） | 完整 IDE | 无（纯文本） | 完整 IDE |
 | **代码编辑器** | 内置 Monaco（AI Ghost Text） | 无 | VSCode 编辑器 | 无 | 内置编辑器 |
 | **终端** | xterm.js 集成 + 调试器 | 依赖系统终端 | 集成终端 | 依赖系统终端 | 集成终端 |
-| **多模型** | DeepSeek / OpenAI / Anthropic | 仅 OpenAI | 多家 API | 仅 Anthropic | 多家 API |
+| **多模型** | ✅ DeepSeek / OpenAI / Anthropic | ❌ 仅 OpenAI | ⚠️ 部分兼容 | ❌ 仅 Anthropic | ⚠️ 部分兼容 |
+| **DeepSeek V4 优化** | ✅ 原生 Tool Calling + task_complete | ❌ 不兼容 | ⚠️ 格式冲突 | ❌ 不兼容 | ⚠️ 需中间代理 |
+| **前缀缓存** | ✅ byte-stable 前缀，~90% 成本折扣 | ❌ | ❌ | ❌ | ❌ |
 | **文件类型** | 65+ 格式拖放即读 | 基础文件读写 | 项目内文件 | 基础文件读写 | 项目内文件 |
 | **DOCX/XLSX** | 自动解压提取文本 | ❌ | ❌ | ❌ | ❌ |
 | **图片多模态** | 拖放/选择 → 自动 base64 | ❌ | ✓ | ✓ | ✓ |
