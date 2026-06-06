@@ -1,0 +1,68 @@
+import { loadGeneralPreferences } from './storage';
+
+type Lang = 'zh' | 'en';
+
+const texts: Record<string, Record<Lang, string>> = {
+  'chat.placeholder': { zh: '描述你的需求，AI 将全自动执行...', en: 'Describe your task, AI will execute...' },
+  'chat.emptyTitle': { zh: 'DevWhale', en: 'DevWhale' },
+  'chat.emptyDesc': { zh: 'AI 驱动的开发工作台', en: 'AI-Powered Developer Workbench' },
+  'chat.hint1': { zh: '分析项目', en: 'Analyze Project' },
+  'chat.hint2': { zh: '修复 Bug', en: 'Fix Bug' },
+  'chat.hint3': { zh: '搭建功能', en: 'Build Feature' },
+  'chat.send': { zh: '发送', en: 'Send' },
+  'chat.code.copy': { zh: '复制', en: 'Copy' },
+  'chat.code.copied': { zh: '已复制 ✓', en: 'Copied ✓' },
+  'sidebar.newChat': { zh: '新建会话', en: 'New Chat' },
+  'sidebar.noChats': { zh: '暂无会话', en: 'No conversations' },
+  'sidebar.noChatsHint': { zh: '点击上方按钮创建', en: 'Click button above to create' },
+  'sidebar.online': { zh: '在线', en: 'Online' },
+  'sidebar.lightMode': { zh: '日间模式', en: 'Light Mode' },
+  'sidebar.darkMode': { zh: '夜间模式', en: 'Dark Mode' },
+  'sidebar.uncategorized': { zh: '未分类', en: 'Uncategorized' },
+  'sidebar.msgCount': { zh: '条消息', en: 'msgs' },
+  'mode.yolo': { zh: '所有操作自动执行', en: 'Auto-execute all' },
+  'mode.ask': { zh: '每步操作需确认', en: 'Confirm each step' },
+  'mode.plan': { zh: '先制定计划再执行', en: 'Plan first, then execute' },
+  'mode.yoloDesc': { zh: '全自动执行', en: 'Auto' },
+  'mode.askDesc': { zh: '每步确认', en: 'Confirm' },
+  'mode.planDesc': { zh: '先计划后执行', en: 'Plan' },
+  'settings.title': { zh: '设置', en: 'Settings' },
+  'settings.comingSoon': { zh: '即将推出', en: 'Coming Soon' },
+  'rightPanel.plan': { zh: '计划', en: 'Plan' },
+  'rightPanel.files': { zh: '文件', en: 'Files' },
+  'rightPanel.context': { zh: '上下文', en: 'Context' },
+  'rightPanel.progress': { zh: '进度', en: 'Progress' },
+  'rightPanel.inProgress': { zh: '进行中', en: 'In Progress' },
+  'rightPanel.pending': { zh: '待处理', en: 'Pending' },
+  'rightPanel.completed': { zh: '已完成', en: 'Completed' },
+  'rightPanel.noTasks': { zh: '暂无任务', en: 'No tasks' },
+  'rightPanel.ready': { zh: '系统就绪', en: 'System Ready' },
+  'rightPanel.items': { zh: '项', en: 'items' },
+  'rightPanel.projectFiles': { zh: '项目文件', en: 'Project Files' },
+  'rightPanel.currentFile': { zh: '当前文件', en: 'Current File' },
+  'rightPanel.noOpenFile': { zh: '没有打开的文件', en: 'No open file' },
+  'rightPanel.projectInfo': { zh: '项目信息', en: 'Project Info' },
+  'rightPanel.saved': { zh: '已保存', en: 'Saved' },
+  'user.you': { zh: '你', en: 'You' },
+  'user.bob': { zh: 'DevWhale', en: 'DevWhale' },
+  'fileTree.bobFrontend': { zh: 'devwhale', en: 'devwhale' },
+  'terminal.debug': { zh: '调试', en: 'Debug' },
+  'terminal.debugFile': { zh: 'script.js (调试)', en: 'script.js (debug)' },
+  'terminal.debugStart': { zh: '▶ 调试', en: '▶ Debug' },
+  'terminal.debugContinue': { zh: '▶ 继续', en: '▶ Continue' },
+  'terminal.debugStep': { zh: '⤵ 跳过', en: '⤵ Step' },
+  'terminal.debugStop': { zh: '■ 停止', en: '■ Stop' },
+  'terminal.debugCallStack': { zh: '调用堆栈', en: 'Call Stack' },
+  'terminal.debugVars': { zh: '变量', en: 'Variables' },
+  'terminal.debugWaiting': { zh: '等待断点触发...', en: 'Waiting for breakpoint...' },
+  'terminal.agentRunning': { zh: '● Agent 正在执行...', en: '● Agent running...' },
+  'terminal.agentCmd': { zh: 'Agent 命令', en: 'Agent commands' },
+  'terminal.agentRecent': { zh: '最近执行', en: 'Recent' },
+  'settings.lsp': { zh: 'LSP 诊断 (Python)', en: 'LSP Diagnostics (Python)' },
+};
+
+export function t(key: string): string {
+  const prefs = loadGeneralPreferences();
+  const lang: Lang = prefs.language === 'en' ? 'en' : 'zh';
+  return texts[key]?.[lang] || key;
+}

@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+/* === 亮色主题变量（默认） === */
+:root {
+  --surface-0: #ffffff;
+  --surface-50: #f8f9fa;
+  --surface-100: #f1f3f5;
+  --surface-200: #e9ecef;
+  --surface-300: #dee2e6;
+  --surface-400: #ced4da;
+  --surface-500: #adb5bd;
+  --surface-600: #868e96;
+  --surface-700: #495057;
+  --surface-800: #343a40;
+  --surface-900: #212529;
+
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-muted: rgba(124, 58, 237, 0.12);
+  --accent-border: rgba(124, 58, 237, 0.3);
+
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* === 暗色主题变量 === */
+html.dark {
+  --surface-0: #0f0f14;
+  --surface-50: #16171d;
+  --surface-100: #1e1f27;
+  --surface-200: #282930;
+  --surface-300: #32333a;
+  --surface-400: #3d3e45;
+  --surface-500: #53545a;
+  --surface-600: #6b6c72;
+  --surface-700: #9ca3af;
+  --surface-800: #d1d5db;
+  --surface-900: #f3f4f6;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 跟随系统时：用媒体查询覆盖 */
+@media (prefers-color-scheme: dark) {
+  html:not(.light) {
+    --surface-0: #0f0f14;
+    --surface-50: #16171d;
+    --surface-100: #1e1f27;
+    --surface-200: #282930;
+    --surface-300: #32333a;
+    --surface-400: #3d3e45;
+    --surface-500: #53545a;
+    --surface-600: #6b6c72;
+    --surface-700: #9ca3af;
+    --surface-800: #d1d5db;
+    --surface-900: #f3f4f6;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* === Tailwind 主题 Token（引用 CSS 变量） === */
+@theme {
+  --color-surface-0: var(--surface-0);
+  --color-surface-50: var(--surface-50);
+  --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
+  --color-surface-300: var(--surface-300);
+  --color-surface-400: var(--surface-400);
+  --color-surface-500: var(--surface-500);
+  --color-surface-600: var(--surface-600);
+  --color-surface-700: var(--surface-700);
+  --color-surface-800: var(--surface-800);
+  --color-surface-900: var(--surface-900);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-muted: var(--accent-muted);
+  --color-accent-border: var(--accent-border);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace;
+}
+
+/* === 全局基础样式 === */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  background: var(--surface-0);
+  color: var(--surface-700);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-variant-ligatures: common-ligatures;
+}
+
+/* 过渡：主题切换时平滑颜色变化（仅 body 和交互元素，避免性能问题） */
+html body, html .transition-theme,
+html button, html a, html input, html select, html textarea, html label {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface-400); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--surface-500); }
+
+/* === Monaco 行内 Diff 标注 === */
+.inline-diff-added {
+  background: rgba(16, 185, 129, 0.15);
+}
+.inline-diff-added-glyph {
+  background: rgba(16, 185, 129, 0.4);
+  width: 3px !important;
+  margin-left: 3px;
+}
+.inline-diff-removed {
+  background: rgba(239, 68, 68, 0.15);
+}
+.inline-diff-removed-glyph {
+  background: rgba(239, 68, 68, 0.4);
+  width: 3px !important;
+  margin-left: 3px;
+}
+
+/* === 调试断点标记 === */
+.bp-glyph {
+  background: #ef4444;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50%;
+  margin: 4px 0 0 6px;
+}
+.bp-line {
+  background: rgba(239, 68, 68, 0.12);
+}
+.bp-active-line {
+  background: rgba(245, 158, 11, 0.25) !important;
+}
+.bp-active-glyph {
+  background: #f59e0b;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50%;
+  margin: 4px 0 0 6px;
+}

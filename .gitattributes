@@ -1,0 +1,22 @@
+# 统一行尾为 LF，防止 Windows/Unix 交叉开发时 diff 噪音
+* text=auto eol=lf
+
+# 二进制文件
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.pdf binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+
+# Tauri 构建产物
+src-tauri/target/ linguist-vendored
+src-tauri/gen/ linguist-generated

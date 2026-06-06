@@ -1,0 +1,91 @@
+{
+  "name": "devwhale",
+  "private": true,
+  "version": "0.2.0",
+  "description": "AI-powered desktop development workbench — Electron + React + TypeScript",
+  "repository": "github:your-username/devwhale",
+  "keywords": [
+    "ai-agent",
+    "coding-agent",
+    "deepseek",
+    "electron",
+    "react",
+    "typescript",
+    "desktop-app",
+    "developer-tools"
+  ],
+  "author": "devwhale",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.electron.json && tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "electron:dev": "vite",
+    "electron:build": "npm run build && electron-builder",
+    "electron:start": "electron ."
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "@types/ws": "^8.18.1",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^5.5.0",
+    "clsx": "^2.1.1",
+    "electron-updater": "^6.3.0",
+    "pyright": "^1.1.410",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.0",
+    "@types/node": "^24.12.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "electron": "^36.5.0",
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.28.0",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.59.2",
+    "vite": "^8.0.12",
+    "vite-plugin-electron": "^0.29.0"
+  },
+  "build": {
+    "appId": "com.devwhale.app",
+    "productName": "devwhale",
+    "icon": "build/icon.ico",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0",
+    "outDir": "dist-electron",
+    "noEmit": false,
+    "verbatimModuleSyntax": false,
+    "allowImportingTsExtensions": false,
+    "esModuleInterop": true,
+    "target": "es2022",
+    "skipLibCheck": true,
+    "rootDir": "electron"
+  },
+  "include": ["electron/main.ts", "electron/preload.ts"]
+}
