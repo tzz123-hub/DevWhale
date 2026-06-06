@@ -3,7 +3,8 @@
 </p>
 
 <h1 align="center">DevWhale</h1>
-<p align="center"><strong>AI 驱动的桌面开发工作台</strong> — 对标 Cursor / Trae Solo</p>
+<p align="center"><strong>AI 驱动的桌面开发工作台</strong></p>
+<p align="center"><em>Focus Deep. Build Efficiently. Code with DevWhale.</em></p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" /></a>
