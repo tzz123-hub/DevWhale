@@ -1,10 +1,16 @@
 <p align="center">
-  <img src="build/icon.png" width="128" alt="DevWhale" />
+  <img src="build/logo.png" width="128" alt="DevWhale" />
 </p>
 
 <h1 align="center">DevWhale</h1>
-<p align="center"><strong>AI 驱动的桌面开发工作台</strong></p>
+<p align="center"><strong>AI-Powered Desktop Dev Workbench</strong></p>
 <p align="center"><em>Focus Deep. Build Efficiently. Code with DevWhale.</em></p>
+
+<p align="center">
+  <strong>English</strong>
+  &nbsp;·&nbsp;
+  <a href="./README.zh-CN.md">简体中文</a>
+</p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" /></a>
@@ -17,270 +23,256 @@
 
 ---
 
-DevWhale 是一个轻量级的 AI 编程助手桌面应用。三栏布局、流式对话、Monaco 代码编辑器（AI Ghost Text 补全 + LSP 诊断）、xterm.js 终端（内置 V8 调试器）、VSCode 风格文件树、检查点一键回滚、Skill 市场。AI 引擎支持流式 Tool Calling，可读/写/编辑/Git 操作/Web 搜索/应用补丁/创建 Word 文档。三种执行模式（YOLO 全自动 / Ask 每步确认 / Plan 先计划后执行）。拖放支持 65+ 文件格式，DOCX/XLSX 自动解压提取文本，图片转 base64 多模态输入。
+DevWhale is a lightweight AI-powered coding assistant desktop app. Three-panel layout, streaming chat, Monaco editor (AI Ghost Text completion + LSP diagnostics), xterm.js terminal (with built-in V8 debugger), VSCode-style file tree, one-click checkpoint rollback, Skill marketplace — all running locally. The AI engine supports streaming Tool Calling: read/write/edit files, Git operations, web search, apply patches, create Word documents. Three execution modes: YOLO (fully automatic), Ask (confirm each step), Plan (plan first, then execute). Drag-and-drop supports 65+ file formats with automatic DOCX/XLSX text extraction and image-to-base64 multimodal input.
 
 ---
 
-## 功能
+## Why DevWhale
 
-### 核心能力
-- 🧠 **真实 AI 对话** — 对接 DeepSeek（V4 Pro / V4 Flash）、OpenAI（GPT-4o）、Anthropic（Claude）多模型，流式输出，支持图片输入
-- 🔧 **Agent 工具调用** — 流式 Tool Calling：读文件、写文件、编辑文件、执行命令、Git 状态/差异/提交/分支、Web 搜索/抓取、创建 Word 文档、应用 unified diff 补丁
-- 💬 **会话管理** — 多会话、项目分组、搜索过滤、右键菜单（重命名/删除/移动分组/导出 Markdown）、消息持久化
-- 📝 **代码编辑器** — 集成 Monaco Editor，支持 TypeScript/JavaScript/Python/Rust/Go 语法高亮、智能补全、AI 内联补全（Ghost Text）、行内 Diff 标注、Ctrl+S 保存到文件系统
-- 🖥️ **终端面板** — 基于 xterm.js 的终端模拟器，支持命令历史（↑↓）、Agent 命令日志折叠/展开、实时流式输出
-- 📁 **文件树** — 项目文件浏览，自动递归扫描实际文件系统，按扩展名着色
+### 🧠 Built for DeepSeek V4 Pro
 
-### 辅助系统
-- 🌓 **日/夜主题** — 跟随系统自动切换，或手动切换亮色/暗色，使用 CSS 变量 + Tailwind token 体系
-- 📋 **规则与记忆** — 设定 AI 行为准则（支持多条规则开关），跨会话记住事实。自动读取项目级规则文件（.devwhale/rules.md、AGENTS.md、CLAUDE.md、.cursorrules）
-- 🔙 **检查点回滚** — 文件写入/编辑前自动备份，右侧面板随时回滚到之前的版本，支持多文件追踪
-- 🔍 **语义索引** — 自动分析项目 import/export 依赖图和关键符号表，注入 system prompt 帮助 AI 理解项目结构
-- 🛠️ **技能系统** — 内置 12 个专家 Skill（代码审查/测试生成/文档编写/性能优化/安全审计等），支持从 SkillsMP 市场搜索安装社区 Skill
-- 🐞 **调试器** — 集成 Node.js V8 Inspector 协议，支持断点设置、单步执行、变量查看
-- 📡 **LSP 支持** — 内置 Pyright（Python），可选 Rust Analyzer / gopls，提供诊断和代码导航
-- 🔌 **MCP 协议** — 支持 Model Context Protocol 服务器，可扩展外部工具链
-- 🌐 **国际化** — 简体中文 / English 双语界面可切换
-- ⚙️ **完整设置面板** — 11 个设置子面板：通用 / MCP / 模型 / 技能 / 对话流 / 外部应用授权 / 云端运行环境 / 工作树 / 命令 / 规则与记忆 / 关于
+Codex only supports OpenAI. Claude Code only supports Anthropic. **They don't work well with DeepSeek** — broken tool calls, context loss, severe degradation beyond 128K tokens.
 
-### 安全与体验
-- 🔏 **隐私模式** — 开启后 AI 不会记录或推断个人信息
-- ⏹ **流式中断** — 对话生成过程中可随时停止
-- 🔄 **自动重试** — API 网络请求失败自动重试 3 次，429/500 自动退避
-- 📊 **Token 用量** — 每条消息显示 prompt/completion/cache 命中率
-- 📥 **文件拖放** — 支持拖放代码文件和图片到对话框，自动读取内容并编码
+DevWhale was **designed from day one for DeepSeek V4 Pro** — complete Tool Calling loop, `task_complete` termination protocol, 700K-character context protection, one-click multi-model switching between DeepSeek / OpenAI / Anthropic.
+
+### 💰 Prefix Cache Optimization — 90% Cost Reduction
+
+DeepSeek V4 provides **~90% cache discount** for byte-stable prefixes at 128-token granularity. DevWhale's Agent engine deliberately keeps the system prompt prefix stable — rules, memories, skills, project index, MCP tool list are all prepended and only appended — ensuring every conversation turn hits the cache. **The same code review task costs 1/10 of what it does on Cursor.**
+
+Cursor and Claude Code restructure prompts on every tool call, resulting in near-zero cache hits. Codex is locked to OpenAI and never benefits from DeepSeek's caching.
+
+### 🖥️ Standalone Desktop App, Not an IDE Plugin
+
+Unlike Cursor (a modified VSCode) or Claude Code (a terminal CLI), DevWhale is a **native Electron desktop app** — double-click to launch, with built-in Monaco + xterm + file tree. No IDE dependency. Ideal for developers who don't want to switch editors, and accessible to non-technical users.
 
 ---
 
-## 快速开始
+## Features
 
-### 1. 下载运行
+### Core
+- 🧠 **AI Chat** — DeepSeek (V4 Pro / V4 Flash), OpenAI (GPT-4o), Anthropic (Claude). Streaming output, image input support
+- 🔧 **Agent Tool Calling** — Streaming Tool Calling: read/write/edit files, exec commands, Git status/diff/commit/branch, web search/scrape, create DOCX, apply unified diff patches
+- 💬 **Session Management** — Multiple conversations, project groups, search & filter, right-click menu (rename/delete/move group/export Markdown), persistent messages
+- 📝 **Code Editor** — Monaco Editor with TypeScript/JavaScript/Python/Rust/Go syntax highlighting, smart completion, AI inline completion (Ghost Text), inline diff annotations, Ctrl+S save to filesystem
+- 🖥️ **Terminal** — xterm.js terminal emulator with command history (↑↓), collapsible Agent command logs, real-time streaming output
+- 📁 **File Tree** — Project file browser, recursive filesystem scanning, extension-based coloring
 
-从 [Releases](../../releases) 下载 `devwhale Setup.exe`，安装后双击运行。
+### Auxiliary
+- 🌓 **Light/Dark Theme** — Auto-follow system, manual toggle, CSS variables + Tailwind token system
+- 📋 **Rules & Memory** — Custom AI behavior rules (multiple, toggleable), cross-session memory. Auto-reads project-level rule files (`.devwhale/rules.md`, `AGENTS.md`, `CLAUDE.md`, `.cursorrules`)
+- 🔙 **Checkpoints** — Auto-backup before file writes/edits, one-click rollback from right panel, multi-file tracking
+- 🔍 **Semantic Index** — Auto-analyzes project import/export dependency graphs and symbol tables, injects into system prompt
+- 🛠️ **Skill System** — 12 built-in expert skills (code review, test gen, docs, perf optimization, security audit, etc.) + community marketplace via SkillsMP
+- 🐞 **Debugger** — Integrated Node.js V8 Inspector protocol: breakpoints, step execution, variable inspection
+- 📡 **LSP Support** — Built-in Pyright (Python), optional Rust Analyzer / gopls for diagnostics and code navigation
+- 🔌 **MCP Protocol** — Model Context Protocol server support for extensible toolchains
+- 🌐 **i18n** — Simplified Chinese / English toggle
+- ⚙️ **Settings Panel** — 11 sub-panels: General / MCP / Models / Skills / Chat Flow / External Auth / Cloud Runtime / Worktree / Commands / Rules & Memory / About
 
-或从源码启动：
+### Safety & UX
+- 🔏 **Privacy Mode** — AI won't log or infer personal information
+- ⏹ **Stream Abort** — Stop generation mid-response
+- 🔄 **Auto Retry** — 3 automatic retries on network failure, exponential backoff on 429/500
+- 📊 **Token Usage** — Per-message prompt/completion/cache hit rate display
+- 📥 **Drag & Drop** — Drop code files and images directly into the chat
+
+---
+
+## Quick Start
+
+### 1. Download
+
+Download `devwhale Setup.exe` from [Releases](../../releases) and run.
+
+Or run from source:
 
 ```bash
-cd bob前端
+cd DevWhale
 npm install
-npx electron .          # 直接启动 Electron
-# 或
-npm run dev             # Vite 开发服务器 + Electron 窗口
+npx electron .          # Launch Electron directly
+npm run dev             # Vite dev server + Electron window
 ```
 
-### 2. 配置 API Key
+### 2. Configure API Key
 
-首次使用需要配置 AI API Key：
-
-1. 打开应用 → 左下角头像 → 设置（Settings）→ 模型（Models）
-2. 选择提供商（DeepSeek / OpenAI / Anthropic）
-3. 输入 API Key
+1. Open app → Bottom-left avatar → Settings → Models
+2. Select provider (DeepSeek / OpenAI / Anthropic)
+3. Enter API Key
    - DeepSeek: [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys)
    - OpenAI: [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
    - Anthropic: [console.anthropic.com](https://console.anthropic.com)
-4. 选择模型后即可开始对话
+4. Select model and start chatting
 
-### 3. 快速操作指南
+### 3. Quick Reference
 
-| 操作 | 方式 |
-|------|------|
-| 新建会话 | 左侧栏 "+" 按钮 |
-| 重命名会话/分组 | 双击标题 |
-| 删除会话 | 右键 → 删除，或悬停时点 × |
-| 移动会话到分组 | 右键 → 选择目标分组 |
-| 切换模式 | 输入框下方 YOLO / Ask / Plan |
-| 打开文件夹 | 左侧栏 "📂 打开文件夹" |
-| 打开文件 | 文件树点击，或对话中点击文件路径 |
-| Ctrl+S | 保存当前编辑器文件到磁盘 |
-| 停止生成 | 流式输出时下方 "停止生成" 按钮 |
-| 导出会话 | 左侧顶部 "📥 导出" 按钮 → Markdown 文件 |
+| Action | How |
+|--------|-----|
+| New conversation | Sidebar "+" button |
+| Rename conversation/group | Double-click title |
+| Delete conversation | Right-click → Delete, or hover × |
+| Move conversation to group | Right-click → target group |
+| Switch mode | YOLO / Ask / Plan buttons below input |
+| Open folder | Sidebar "📂 Open Folder" |
+| Open file | File tree click, or click file path in chat |
+| Ctrl+S | Save current editor file to disk |
+| Stop generation | "Stop" button during streaming |
+| Export conversation | Sidebar "📥 Export" → Markdown file |
 
 ---
 
-## 技术栈
+## Tech Stack
 
-| 层 | 技术 |
-|----|------|
-| 桌面框架 | Electron 36 |
-| 构建工具 | Vite 8 + vite-plugin-electron |
-| 前端框架 | React 19 + TypeScript 6 |
-| 样式 | Tailwind CSS 4 + CSS 变量主题 |
-| 代码编辑器 | Monaco Editor (@monaco-editor/react) |
-| 终端 | xterm.js 5 + addon-fit |
+| Layer | Technology |
+|-------|-----------|
+| Desktop Framework | Electron 36 |
+| Build Tools | Vite 8 + vite-plugin-electron |
+| Frontend | React 19 + TypeScript 6 |
+| Styling | Tailwind CSS 4 + CSS variable theming |
+| Code Editor | Monaco Editor (@monaco-editor/react) |
+| Terminal | xterm.js 5 + addon-fit |
 | Markdown | react-markdown + remark-gfm + rehype-highlight |
-| AI 接口 | OpenAI 兼容协议（DeepSeek / OpenAI / Anthropic） |
-| 数据持久化 | localStorage |
-| 打包 | electron-builder (NSIS / DMG / AppImage) |
+| AI Interface | OpenAI-compatible protocol (DeepSeek / OpenAI / Anthropic) |
+| Persistence | localStorage |
+| Packaging | electron-builder (NSIS / DMG / AppImage) |
 | LSP | Pyright (bundled) / rust-analyzer / gopls |
-| 调试 | V8 Inspector Protocol |
+| Debugging | V8 Inspector Protocol |
 
 ---
 
-## 项目结构
+## Project Structure
 
 ```
-bob前端/
-├── electron/               # Electron 主进程
-│   ├── main.ts             # 窗口管理、IPC（文件/Shell/LSP/调试/更新）
-│   └── preload.ts          # contextBridge 安全 API 暴露
+DevWhale/
+├── electron/               # Electron main process
+│   ├── main.ts             # Window, IPC (file/shell/LSP/debug/update)
+│   └── preload.ts          # contextBridge API
 ├── src/
-│   ├── components/         # React UI 组件
-│   │   ├── Sidebar.tsx     # 左侧会话列表 + 项目分组
-│   │   ├── ChatArea.tsx    # 中间对话区 + 输入框 + 模式切换
-│   │   ├── MessageBubble.tsx # Markdown 消息渲染 + 代码运行/应用
-│   │   ├── RightPanel.tsx  # 右侧 TODO/文件树/检查点/上下文面板
-│   │   ├── SettingsPanel.tsx # 设置面板（11 个子面板）
-│   │   ├── CodeViewer.tsx  # Monaco 编辑器 + AI 补全
-│   │   ├── DiffViewer.tsx  # Unified Diff 解析 + 行内高亮
-│   │   ├── FileTree.tsx    # 递归文件树组件
-│   │   ├── TerminalPanel.tsx # xterm.js 终端
-│   │   └── SkillStore.tsx  # Skill 专区（已安装/搜索/榜单）
-│   ├── hooks/              # 自定义 hooks
-│   │   └── useTheme.tsx    # 主题 Context（亮/暗/跟随系统）
-│   ├── lib/                # 工具模块
-│   │   ├── api.ts          # Agent 引擎 v3：system prompt 构建 + 流式 Tool Calling 循环
-│   │   ├── tools.ts        # 工具执行调度器（读/写/编辑/Git/搜索/补丁/DOCX）
-│   │   ├── shell.ts        # 跨平台 Shell 封装（PowerShell/Bash 自适应）
-│   │   ├── tauriFs.ts      # Electron IPC 文件系统操作
-│   │   ├── storage.ts      # localStorage 持久化（会话/设置/技能/提供商/规则记忆）
-│   │   ├── indexer.ts      # 项目语义索引（符号 + 依赖图）
-│   │   ├── completion.ts   # AI 代码补全引擎（FIM + Ghost Text）
-│   │   ├── checkpoint.ts   # 文件操作前自动备份 + 回滚
-│   │   ├── lsp.ts          # LSP 管理器（Python/TypeScript/Rust/Go）
-│   │   ├── mcp.ts          # MCP 客户端（复用 LSP IPC 基础设施）
-│   │   ├── debugger.ts     # Node.js V8 Inspector 调试器
-│   │   ├── skillsMarket.ts # SkillsMP 市场 API + 双语搜索 + GitHub 下载
-│   │   ├── i18n.ts         # 国际化（简体中文 / English）
-│   │   └── utils.ts        # cn() / 时间格式化
-│   ├── types/              # TypeScript 类型定义
+│   ├── components/         # React UI
+│   │   ├── Sidebar.tsx     # Conversation list + project groups
+│   │   ├── ChatArea.tsx    # Chat area + input + mode switch
+│   │   ├── MessageBubble.tsx # Markdown message renderer
+│   │   ├── RightPanel.tsx  # TODOs / file tree / checkpoints / context
+│   │   ├── SettingsPanel.tsx # Settings (11 sub-panels)
+│   │   ├── CodeViewer.tsx  # Monaco editor + AI completion
+│   │   ├── DiffViewer.tsx  # Unified diff parser + inline highlight
+│   │   ├── FileTree.tsx    # Recursive file tree
+│   │   ├── TerminalPanel.tsx # xterm.js terminal
+│   │   └── SkillStore.tsx  # Skill marketplace
+│   ├── hooks/              # Custom hooks
+│   │   └── useTheme.tsx    # Theme context (light/dark/system)
+│   ├── lib/                # Core modules
+│   │   ├── api.ts          # Agent engine v3: system prompt + streaming Tool Calling
+│   │   ├── tools.ts        # Tool dispatcher (read/write/edit/Git/search/patch/DOCX)
+│   │   ├── shell.ts        # Cross-platform shell (PowerShell/Bash)
+│   │   ├── tauriFs.ts      # Electron IPC file operations
+│   │   ├── storage.ts      # localStorage persistence
+│   │   ├── indexer.ts      # Semantic project index (symbols + dependency graph)
+│   │   ├── completion.ts   # AI code completion (FIM + Ghost Text)
+│   │   ├── checkpoint.ts   # Auto-backup + rollback
+│   │   ├── lsp.ts          # LSP manager (Python/Rust/Go)
+│   │   ├── mcp.ts          # MCP client (reuses LSP IPC infrastructure)
+│   │   ├── debugger.ts     # Node.js V8 Inspector debugger
+│   │   ├── skillsMarket.ts # SkillsMP marketplace API
+│   │   ├── i18n.ts         # Internationalization (zh-CN / en)
+│   │   └── utils.ts        # cn() / time formatting
+│   ├── types/              # TypeScript types
 │   │   └── chat.ts         # Message / Conversation / Project / TodoItem / Mode
-│   ├── App.tsx             # 根组件：全局状态 + Agent 调度 + 持久化
-│   └── main.tsx            # React 入口 + ThemeProvider 挂载
-├── dist/                   # Vite 构建输出（前端）
-├── dist-electron/          # Vite 构建输出（Electron 主进程）
-├── release/                # electron-builder 打包输出
-├── public/                 # 静态资源
-├── package.json            # 依赖与 electron-builder 配置
-├── vite.config.ts          # Vite + electron 插件配置
-├── tsconfig.json           # TypeScript 配置
-├── tsconfig.app.json       # 前端 TS 配置
-├── tsconfig.node.json      # Electron 主进程 TS 配置
-└── index.html              # 入口 HTML
+│   ├── App.tsx             # Root component: global state + agent dispatch + persistence
+│   └── main.tsx            # React entry + ThemeProvider
+├── dist/                   # Vite build output (frontend)
+├── dist-electron/          # TSC build output (Electron main process)
+├── release/                # electron-builder output
+├── public/                 # Static assets
+├── package.json            # Dependencies + electron-builder config
+├── vite.config.ts          # Vite + electron plugin config
+├── tsconfig.json           # TypeScript config
+└── index.html              # Entry HTML
 ```
 
 ---
 
-## 核心架构说明
+## Architecture
 
-### Agent 引擎（api.ts）
+### Agent Engine (api.ts)
 
 ```
-用户输入 → buildSystem (规则/记忆/技能/项目索引/技术栈/MCP/Agent协议)
-         → 构建 messages (system + history + user)
-         → 流式 Tool Calling 循环:
-            ├── fetch API (自动重试 3 次)
-            ├── 累积 delta.content → onToken
-            ├── 累积 delta.tool_calls → 完成时并行执行
-            ├── 工具结果 → 回填 messages → 下一轮
-            └── 终止条件: task_complete / 上下文超限(700K字符) / 连续空转(5轮)
+User input → buildSystem (rules/memories/skills/project index/tech stack/MCP/Agent protocol)
+          → Build messages (system + history + user)
+          → Streaming Tool Calling loop:
+             ├── fetch API (auto-retry 3×)
+             ├── Accumulate delta.content → onToken
+             ├── Accumulate delta.tool_calls → parallel execution on completion
+             ├── Tool results → append to messages → next iteration
+             └── Termination: task_complete / context overflow (700K chars) / empty loop (5 iterations)
 ```
 
-### 工具执行层（tools.ts）
+### Tool Layer (tools.ts)
 
-15 个内置工具 + MCP 动态工具路由：
+15 built-in tools + MCP dynamic routing:
 `read_file | write_file | edit_file | exec_command | list_dir | create_docx | git_status | git_diff | git_log | git_commit | git_branch | apply_patch | web_search | web_fetch | task_complete`
 
-### 数据流
+### Data Flow
 
 ```
 API (DeepSeek/OpenAI/Anthropic)
-  ↕ fetch (OpenAI 兼容 /chat/completions)
-lib/api.ts (Agent 引擎 + 流式 Tool Calling)
+  ↕ fetch (OpenAI-compatible /chat/completions)
+lib/api.ts (Agent engine + streaming Tool Calling)
   ↕ onToolCall / onToken / onProgress
-App.tsx (全局状态管理 + useEffect 持久化)
+App.tsx (Global state + useEffect persistence)
   ↕ props
 React Components (Sidebar / ChatArea / MessageBubble / RightPanel / CodeViewer / TerminalPanel)
   ↕ IPC (contextBridge)
-electron/main.ts (文件I/O / Shell / LSP / 调试器 / 自动更新)
+electron/main.ts (File I/O / Shell / LSP / Debugger)
 ```
 
 ---
 
-## 环境要求
+## Requirements
 
 - **Node.js** ≥ 18
 - **npm** ≥ 9
-- **Windows:** 无需额外依赖（Electron 自带 Chromium）
-- **macOS:** 无需额外依赖
-- **Linux:** 需要 `libgtk-3-0`、`libnotify4` 等（Electron 标准依赖）
+- **Windows:** No extra dependencies (Electron bundles Chromium)
+- **macOS:** No extra dependencies
+- **Linux:** `libgtk-3-0`, `libnotify4` etc. (standard Electron dependencies)
 
-### 快速开发
+### Dev Quick Start
 
 ```bash
-# 安装依赖
 npm install
-
-# 启动开发服务器（Vite + Electron 窗口）
-npm run dev
-
-# 仅编译检查
-npx tsc --noEmit
-
-# 生产构建
-npm run build
-
-# 打包为可分发安装包
-npm run electron:build
+npm run dev             # Vite dev server + Electron window
+npx tsc --noEmit        # Type check only
+npm run build           # Production build
+npm run electron:build  # Package distributable installer
 ```
-
----
-
-## 为什么选择 DevWhale
-
-### 🧠 DeepSeek V4 Pro 原生适配
-
-**Codex 只能接 OpenAI，Claude Code 只能接 Anthropic。** 它们对 DeepSeek 的 Tool Calling 格式、流式响应、系统提示词注入方式兼容性极差，经常出现工具调用失败、上下文丢失、128K 以上退化严重。
-
-DevWhale **从第一行代码就为 DeepSeek V4 Pro 设计**——完整的 Tool Calling 循环、`task_complete` 终止协议、700K 字符上下文保护、Multi-model Router 一行切换，DeepSeek/OpenAI/Anthropic 三模通用。
-
-### 💰 前缀缓存优化，成本直降 90%
-
-DeepSeek V4 对 **128-token 粒度** 的 byte-stable 前缀提供 ~90% 缓存折扣。DevWhale 的 Agent 引擎刻意保持 system prompt 前缀稳定——规则、记忆、技能、项目索引、MCP 工具列表全部前置且只追加不删改——确保每一轮对话都命中缓存，**同样的代码审查任务，单次 API 成本是 Cursor 的 1/10**。
-
-Cursor 和 Claude Code 的提示词结构频繁变动（每次 tool call 插入不同位置），缓存命中率极低。Codex 完全绑死 OpenAI，不打 DeepSeek 缓存策略。
-
-### 🖥️ 独立桌面应用，不是 IDE 插件
-
-不像 Cursor（VSCode 魔改）或 Claude Code（终端 CLI），DevWhale 是 **Electron 原生桌面应用**——双击即用，自带 Monaco + xterm + 文件树，不依赖任何 IDE。适合不愿换编辑器的开发者，也适合非技术用户。
 
 ---
 
 ## vs Codex / Cursor / Claude Code / Trae Solo
 
-| 维度 | DevWhale | Codex (OpenAI) | Cursor | Claude Code | Trae Solo |
-|------|----------|----------------|--------|-------------|-----------|
-| **形态** | 独立桌面应用 | 终端 CLI | IDE（VSCode 魔改） | 终端 CLI | IDE |
-| **启动** | 双击 .exe | `npx` 命令行 | 安装 IDE | `claude` 命令 | 安装 IDE |
-| **GUI** | 三栏布局 + Monaco + xterm | 无（纯文本） | 完整 IDE | 无（纯文本） | 完整 IDE |
-| **代码编辑器** | 内置 Monaco（AI Ghost Text） | 无 | VSCode 编辑器 | 无 | 内置编辑器 |
-| **终端** | xterm.js 集成 + 调试器 | 依赖系统终端 | 集成终端 | 依赖系统终端 | 集成终端 |
-| **多模型** | ✅ DeepSeek / OpenAI / Anthropic | ❌ 仅 OpenAI | ⚠️ 部分兼容 | ❌ 仅 Anthropic | ⚠️ 部分兼容 |
-| **DeepSeek V4 优化** | ✅ 原生 Tool Calling + task_complete | ❌ 不兼容 | ⚠️ 格式冲突 | ❌ 不兼容 | ⚠️ 需中间代理 |
-| **前缀缓存** | ✅ byte-stable 前缀，~90% 成本折扣 | ❌ | ❌ | ❌ | ❌ |
-| **文件类型** | 65+ 格式拖放即读 | 基础文件读写 | 项目内文件 | 基础文件读写 | 项目内文件 |
-| **DOCX/XLSX** | 自动解压提取文本 | ❌ | ❌ | ❌ | ❌ |
-| **图片多模态** | 拖放/选择 → 自动 base64 | ❌ | ✓ | ✓ | ✓ |
-| **检查点回滚** | ✓ 一键回滚 | ❌ | ✓ (Git) | ❌ | ✓ (Git) |
-| **执行模式** | YOLO / Ask / Plan | YOLO only | Agent / Ask | YOLO only | Agent / Ask |
-| **Skill 市场** | 内置 12 + 社区市场 | ❌ | ❌ | ❌ | ❌ |
-| **LSP 诊断** | Pyright 内置 + Monaco | ❌ | VSCode 插件 | ❌ | VSCode 插件 |
-| **调试器** | V8 Inspector + UI | ❌ | VSCode 调试器 | ❌ | VSCode 调试器 |
-| **文件树** | VSCode 风格连接线 | ❌ | ✓ | ❌ | ✓ |
-| **规则记忆** | 自定义规则 + 项目规则 | system prompt | .cursorrules | CLAUDE.md | 配置文件 |
-| **多语言 UI** | 中/英 切换 | 仅英文 | 仅英文 | 仅英文 | 中/英 |
-| **沙箱安全** | 本机直接执行 | 隔离沙箱 ✅ | 本机 | 本机 | 本机 |
-| **成熟度** | 个人项目 | OpenAI 官方 | 商业产品 | Anthropic 官方 | 商业产品 |
-| **价格** | 免费开源 | 免费 | 订阅制 | API 付费 | 免费 |
+| Dimension | DevWhale | Codex (OpenAI) | Cursor | Claude Code | Trae Solo |
+|-----------|----------|----------------|--------|-------------|-----------|
+| **Form Factor** | Standalone desktop app | Terminal CLI | IDE (VSCode fork) | Terminal CLI | IDE |
+| **Launch** | Double-click .exe | `npx` command | Install IDE | `claude` command | Install IDE |
+| **GUI** | 3-panel + Monaco + xterm | None (plain text) | Full IDE | None (plain text) | Full IDE |
+| **Code Editor** | Built-in Monaco (AI Ghost Text) | None | VSCode editor | None | Built-in editor |
+| **Terminal** | xterm.js + debugger | System terminal | Integrated | System terminal | Integrated |
+| **Multi-Model** | ✅ DeepSeek / OpenAI / Anthropic | ❌ OpenAI only | ⚠️ Partial | ❌ Anthropic only | ⚠️ Partial |
+| **DeepSeek V4** | ✅ Native Tool Calling + task_complete | ❌ Incompatible | ⚠️ Format issues | ❌ Incompatible | ⚠️ Proxy required |
+| **Prefix Cache** | ✅ byte-stable prefix, ~90% cost reduction | ❌ | ❌ | ❌ | ❌ |
+| **File Formats** | 65+ drag-and-drop | Basic read/write | Project files | Basic read/write | Project files |
+| **DOCX/XLSX** | Auto-extract text | ❌ | ❌ | ❌ | ❌ |
+| **Image Multimodal** | Drag/select → auto base64 | ❌ | ✓ | ✓ | ✓ |
+| **Checkpoints** | ✓ One-click rollback | ❌ | ✓ (Git) | ❌ | ✓ (Git) |
+| **Execution Modes** | YOLO / Ask / Plan | YOLO only | Agent / Ask | YOLO only | Agent / Ask |
+| **Skill Marketplace** | 12 built-in + community | ❌ | ❌ | ❌ | ❌ |
+| **LSP Diagnostics** | Pyright built-in + Monaco | ❌ | VSCode plugins | ❌ | VSCode plugins |
+| **Debugger** | V8 Inspector + UI | ❌ | VSCode debugger | ❌ | VSCode debugger |
+| **File Tree** | VSCode-style connectors | ❌ | ✓ | ❌ | ✓ |
+| **Rules & Memory** | Custom rules + project rules | system prompt | .cursorrules | CLAUDE.md | config files |
+| **i18n** | zh-CN / en | English only | English only | English only | zh-CN / en |
+| **Sandbox** | Native execution | Sandboxed ✅ | Native | Native | Native |
+| **Maturity** | Independent project | OpenAI official | Commercial | Anthropic official | Commercial |
+| **Pricing** | Free & open-source | Free | Subscription | API paid | Free |
 
 ## License
 
