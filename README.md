@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="build/logo.svg" width="200" alt="DevWhale" />
+  <img src="build/logo.svg" width="480" alt="DevWhale" />
 </p>
 
 <h1 align="center">DevWhale</h1>
