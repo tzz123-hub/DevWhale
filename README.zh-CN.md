@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/tzz123-hub/DevWhale/main/build/logo.png" width="128" alt="DevWhale" />
+  <img src="build/logo.svg" width="200" alt="DevWhale" />
 </p>
 
 <h1 align="center">DevWhale</h1>
