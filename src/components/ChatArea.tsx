@@ -12,6 +12,8 @@ interface ChatAreaProps {
   onSend: (content: string, images?: string[]) => void;
   isStreaming?: boolean;
   onAbort?: () => void;
+  onDeleteMessage?: (msgId: string) => void;
+  onRetryMessage?: (msgId: string) => void;
 }
 
 interface DroppedFile {
@@ -23,7 +25,7 @@ interface DroppedFile {
   imageMime?: string;
 }
 
-export function ChatArea({ messages, mode, onModeChange, onSend, isStreaming, onAbort }: ChatAreaProps) {
+export function ChatArea({ messages, mode, onModeChange, onSend, isStreaming, onAbort, onDeleteMessage, onRetryMessage }: ChatAreaProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -263,7 +265,12 @@ export function ChatArea({ messages, mode, onModeChange, onSend, isStreaming, on
           ) : (
             <div className={settings.density === 'compact' ? 'py-0.5' : 'py-2'}>
               {messages.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  onDelete={onDeleteMessage ? () => onDeleteMessage(msg.id) : undefined}
+                  onRetry={msg.role === 'user' && onRetryMessage ? () => onRetryMessage(msg.id) : undefined}
+                />
               ))}
             </div>
           )}
@@ -354,7 +361,7 @@ export function ChatArea({ messages, mode, onModeChange, onSend, isStreaming, on
 
             <button
               onClick={handleSend}
-              disabled={!input.trim() || isStreaming}
+              disabled={(!input.trim() && droppedFiles.length === 0) || isStreaming}
               className={`
                 shrink-0 p-2 rounded-xl transition-all duration-200
                 ${isStreaming

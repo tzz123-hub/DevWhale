@@ -151,9 +151,14 @@ function App() {
   // 副作用：只执行一次
   useEffect(() => { migrateLegacyApiKey(); }, []);
 
-  // ====== 持久化：自动保存 ======
+  // ====== 持久化：自动保存（500ms 防抖，避免流式输出时写入风暴） ======
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
-    saveConversations(conversations);
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveConversations(conversations);
+    }, 500);
+    return () => clearTimeout(saveTimerRef.current);
   }, [conversations]);
 
   useEffect(() => {
@@ -203,7 +208,7 @@ function App() {
       try {
         const raw = await listFilesRecursive(projectPath);
         if (cancelled) return;
-        const files = raw.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('.'));
+        const files = raw.split('\n').map(l => l.trim()).filter(l => l);
         setFileTree(buildFileTree(files, projectPath));
       } catch {
         if (!cancelled) setFileTree(undefined);
@@ -682,6 +687,25 @@ function App() {
               onSend={handleSend}
               isStreaming={isStreaming}
               onAbort={handleAbort}
+              onDeleteMessage={(msgId) => {
+                setConversations((prev) =>
+                  prev.map((c) => c.id === activeConversationId
+                    ? { ...c, messages: c.messages.filter((m) => m.id !== msgId), updatedAt: Date.now() }
+                    : c)
+                );
+              }}
+              onRetryMessage={(msgId) => {
+                const conv = conversations.find((c) => c.id === activeConversationId);
+                const msg = conv?.messages.find((m) => m.id === msgId);
+                if (msg?.content) {
+                  setConversations((prev) =>
+                    prev.map((c) => c.id === activeConversationId
+                      ? { ...c, messages: c.messages.filter((m) => m.id !== msgId), updatedAt: Date.now() }
+                      : c)
+                  );
+                  handleSend(msg.content, msg.files?.map((f) => f.content).filter(Boolean) as string[] | undefined);
+                }
+              }}
             />
           ) : middleTab === 'terminal' ? (
             <TerminalPanel cwd={projectPath} toolLogs={toolLogs} liveOutput={terminalOutput} />
