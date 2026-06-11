@@ -1,5 +1,19 @@
 # DevWhale 变更日志
 
+## [2026-06-11] Bug 修复：Shell 编码 + 平台检测
+
+### Shell 编码修复
+- **PowerShell GBK 乱码**: `shell: false` 直连 + `[Console]::OutputEncoding=[Text.Encoding]::UTF8` 强制 UTF-8 输出
+- **cmd.exe 乱码**: `chcp 65001 >nul` 切换代码页
+- **`listDirectory` 平台检测**: 改为 try PowerShell 优先，失败回退 bash（不再依赖 `detectPlatform()` 缓存）
+
+### 消息气泡操作按钮
+- 新增复制/重试/删除按钮（hover 显示）
+- 删除：过滤消息；重试：删旧消息 + 重新发送原文
+
+### 工具名修复
+- 空闲终止消息工具名从 `(?, ?)` 修复为真实工具名
+
 ## [2026-06-11] MCP (Model Context Protocol) 功能实现
 
 ### 新增功能
