@@ -68,40 +68,41 @@ export async function execCommand(
 /* ====== 高级操作 ====== */
 
 export async function listDirectory(dirPath: string): Promise<string> {
-  const platform = await detectPlatform();
-  if (platform === 'windows') {
-    return execCommand('powershell', [
+  // 优先用 PowerShell（Windows），失败则回退到 bash（Unix）
+  try {
+    return await execCommand('powershell', [
       '-NoProfile', '-Command',
-      `Get-ChildItem -Path '${dirPath.replace(/'/g, "''")}' -Name | Where-Object { $_ -notmatch 'node_modules|target|\\.git|dist' }`
+      `Get-ChildItem -Path '${dirPath.replace(/'/g, "''")}' -Name -ErrorAction SilentlyContinue | Where-Object { $_ -notmatch 'node_modules|target|\\.git|dist' }`
+    ]);
+  } catch {
+    return execCommand('bash', ['-lc',
+      `ls -1 '${dirPath.replace(/'/g, "'\\''")}' 2>/dev/null | grep -v -E 'node_modules|target|\\.git|dist' || echo "(空目录)"`
     ]);
   }
-  return execCommand('bash', ['-lc',
-    `ls -1 '${dirPath.replace(/'/g, "'\\''")}' 2>/dev/null | grep -v -E 'node_modules|target|\\.git|dist' || echo "(空目录)"`
-  ]);
 }
 
 export async function listFilesRecursive(dirPath: string): Promise<string> {
-  const platform = await detectPlatform();
-  if (platform === 'windows') {
-    return execCommand('powershell', [
+  try {
+    return await execCommand('powershell', [
       '-NoProfile', '-Command',
       `Get-ChildItem -Path '${dirPath.replace(/'/g, "''")}' -Recurse -File -Name -ErrorAction SilentlyContinue | Where-Object { $_ -notmatch 'node_modules|target|\\.git|(^|/)dist(/|$)' } | ForEach-Object { $_ -replace '\\\\', '/' }`
     ]);
+  } catch {
+    return execCommand('bash', ['-lc',
+      `find '${dirPath.replace(/'/g, "'\\''")}' -type f 2>/dev/null | grep -v -E 'node_modules|target|\\.git|(^|/)dist(/|$)' | sed 's|${dirPath.replace(/'/g, "'\\''")}/||' | sort`
+    ]);
   }
-  return execCommand('bash', ['-lc',
-    `find '${dirPath.replace(/'/g, "'\\''")}' -type f 2>/dev/null | grep -v -E 'node_modules|target|\\.git|(^|/)dist(/|$)' | sed 's|${dirPath.replace(/'/g, "'\\''")}/||' | sort`
-  ]);
 }
 
 export async function readFileContent(filePath: string): Promise<string> {
-  const platform = await detectPlatform();
-  if (platform === 'windows') {
-    return execCommand('powershell', [
+  try {
+    return await execCommand('powershell', [
       '-NoProfile', '-Command',
       `Get-Content -Path '${filePath.replace(/'/g, "''")}' -Raw -ErrorAction SilentlyContinue`
     ]);
+  } catch {
+    return execCommand('bash', ['-lc', `cat '${filePath.replace(/'/g, "'\\''")}' 2>/dev/null`]);
   }
-  return execCommand('bash', ['-lc', `cat '${filePath.replace(/'/g, "'\\''")}' 2>/dev/null`]);
 }
 
 export async function writeFileContent(filePath: string, content: string): Promise<string> {
