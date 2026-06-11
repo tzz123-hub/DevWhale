@@ -12,10 +12,13 @@ import { readFileContent } from './shell';
 
 /* ====== stableStringify ====== */
 function stableStringify(obj: any): string {
+  if (obj === undefined) return 'null';
   if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
   if (Array.isArray(obj)) return '[' + obj.map(stableStringify).join(',') + ']';
   const keys = Object.keys(obj).sort();
-  const pairs = keys.map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`);
+  const pairs = keys
+    .filter((k) => obj[k] !== undefined)
+    .map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`);
   return '{' + pairs.join(',') + '}';
 }
 
@@ -168,30 +171,23 @@ async function buildSystem(projectPath: string): Promise<string> {
     }
   }
 
-  // MCP 服务器工具
-  const mcpServers = loadMcpServers().filter((s) => s.enabled);
-  if (mcpServers.length > 0) {
-    // 尝试启动 MCP 服务器并获取工具
-    const mcpToolDescs: string[] = [];
-    for (const server of mcpServers) {
-      try {
-        const { startMcpServer } = await import('./mcp');
-        const tools = await Promise.race([
-          startMcpServer(server),
-          new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
-        ]).catch(() => []);
-        if (tools && tools.length > 0) {
-          for (const tool of tools) {
-            mcpToolDescs.push(`- mcp_${server.id}_${tool.name}: ${tool.description}`);
-          }
+  // MCP 服务器工具 — 从已启动会话读取，不重复启动
+  const mcpToolDescs: string[] = [];
+  {
+    const { getAllMcpTools } = await import('./mcp');
+    const registered = getAllMcpTools();
+    if (registered.length > 0) {
+      for (const { serverId, tools } of registered) {
+        for (const tool of tools) {
+          mcpToolDescs.push(`- mcp_${serverId}_${tool.name}: ${tool.description}`);
         }
-      } catch {}
+      }
     }
-    if (mcpToolDescs.length > 0) {
-      parts.push('【MCP 工具（来自已配置的服务器）】');
-      parts.push(...mcpToolDescs);
-      parts.push('');
-    }
+  }
+  if (mcpToolDescs.length > 0) {
+    parts.push('【MCP 工具（来自已配置的服务器）】');
+    parts.push(...mcpToolDescs);
+    parts.push('');
   }
 
   parts.push(`你是 ${modelName}，DevWhale 的 AI Agent。`);
@@ -230,9 +226,11 @@ async function buildSystem(projectPath: string): Promise<string> {
 function makeUsage(raw: any) {
   if (!raw) return null;
   return {
-    prompt: raw.prompt_tokens || 0, completion: raw.completion_tokens || 0,
-    cacheHit: raw.prompt_cache_hit_tokens || 0,
-    cacheMiss: raw.prompt_cache_miss_tokens || (raw.prompt_tokens || 0) - (raw.prompt_cache_hit_tokens || 0),
+    prompt: raw.prompt_tokens ?? 0,
+    completion: raw.completion_tokens ?? 0,
+    cacheHit: raw.prompt_cache_hit_tokens ?? 0,
+    cacheMiss: raw.prompt_cache_miss_tokens
+      ?? ((raw.prompt_tokens ?? 0) - (raw.prompt_cache_hit_tokens ?? 0)),
   };
 }
 
@@ -321,7 +319,7 @@ export async function agentChat(
             }),
             model,
             stream: true,
-            ...(model.startsWith('deepseek') ? { thinking: { type: 'enabled' } } : { thinking: { type: 'disabled' } }),
+            ...(model.startsWith('deepseek') ? { thinking: { type: 'enabled' } } : {}),
             tools: TOOLS,
           }),
           signal,
@@ -413,16 +411,14 @@ export async function agentChat(
         let args: any = {}; try { args = JSON.parse(tc.function.arguments); } catch {}
         let result = '';
         for (let retry = 0; retry < 3; retry++) {
-          try {
-            result = await callbacks.onToolCall(tc.function.name, args);
+          result = await callbacks.onToolCall(tc.function.name, args);
+          if (!result.startsWith('【失败】') && !result.startsWith('错误') && !result.startsWith('读取失败')) {
             callbacks.onProgress({ toolName: tc.function.name, args, status: 'ok', result: result.slice(0, 200) });
             return { id: tc.id, result };
-          } catch (e: any) {
-            if (retry < 2) { await new Promise(r => setTimeout(r, 1000 * (retry + 1))); continue; }
-            result = `工具失败: ${e.message || e}`;
-            callbacks.onProgress({ toolName: tc.function.name, args, status: 'fail', result });
-            return { id: tc.id, result };
           }
+          if (retry < 2) { await new Promise(r => setTimeout(r, 1000 * (retry + 1))); continue; }
+          callbacks.onProgress({ toolName: tc.function.name, args, status: 'fail', result: result.slice(0, 200) });
+          return { id: tc.id, result };
         }
         return { id: tc.id, result };
       }));
@@ -442,3 +438,6 @@ export async function agentChat(
     return;
   }
 }
+
+// === 测试导出 ===
+export const __test = { stableStringify, makeUsage };

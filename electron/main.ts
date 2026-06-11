@@ -86,8 +86,8 @@ ipcMain.handle('shell:exec', async (_e, command: string, args: string[], options
       });
       let stdout = '';
       let stderr = '';
-      child.stdout.on('data', (d: any) => { stdout += d.toString(); });
-      child.stderr.on('data', (d: any) => { stderr += d.toString(); });
+      child.stdout!.on('data', (d: any) => { stdout += d.toString(); });
+      child.stderr!.on('data', (d: any) => { stderr += d.toString(); });
       child.on('close', (code: number | null) => {
         if (code === 0) resolve({ success: true, data: stdout });
         else resolve({ success: false, error: stderr || 'exit ' + code, data: stdout });
@@ -167,7 +167,7 @@ ipcMain.handle('lsp:start', async (_e, language: string, command: string, args: 
     });
     const session: LspSession = { process: child, serverId, requestId: 1, pending: new Map(), diagnostics: new Map() };
     let buffer = '';
-    child.stdout.on('data', (d: any) => {
+    child.stdout!.on('data', (d: any) => {
       buffer += d.toString();
       while (true) {
         const hdrEnd = buffer.indexOf('\r\n\r\n');
@@ -176,6 +176,7 @@ ipcMain.handle('lsp:start', async (_e, language: string, command: string, args: 
         const cl = hdr.match(/Content-Length: (\d+)/i);
         if (!cl) { buffer = ''; break; }
         const len = parseInt(cl[1]);
+        if (isNaN(len) || len < 0) { buffer = ''; break; }
         const bodyStart = hdrEnd + 4;
         if (buffer.length < bodyStart + len) break;
         const body = buffer.slice(bodyStart, bodyStart + len);
@@ -249,6 +250,190 @@ function lspNotify(session: LspSession, method: string, params: any) {
   session.process.stdin!.write('Content-Length: ' + Buffer.byteLength(msg, 'utf-8') + '\r\n\r\n' + msg);
 }
 
+// ── MCP (Model Context Protocol) ──────────────────────────────────
+
+interface McpSession {
+  process: ReturnType<typeof spawn>;
+  serverId: string;
+  requestId: number;
+  pending: Map<number, { resolve: (v: any) => void; reject: (e: any) => void }>;
+  tools: Array<{ name: string; description: string; inputSchema: Record<string, any> }>;
+}
+const mcpSessions = new Map<string, McpSession>();
+
+ipcMain.handle('mcp:start', async (_e, command: string, args: string[], cwd?: string) => {
+  const t0 = Date.now();
+  const step = (msg: string) => `[+${Date.now() - t0}ms] ${msg}`;
+  const steps: string[] = [step('mcp:start 开始')];
+  let child: ReturnType<typeof spawn> | null = null;
+
+  try {
+    const serverId = 'mcp-' + t0;
+    const isWin = os.platform() === 'win32';
+    const finalCmd = isWin ? 'cmd.exe' : command;
+    const finalArgs = isWin ? ['/d', '/c', command, ...args] : args;
+
+    steps.push(step(`spawn: ${finalCmd} ${finalArgs.join(' ')}`));
+    child = spawn(finalCmd, finalArgs, {
+      cwd: cwd || process.cwd(),
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env },
+      windowsHide: true,
+    });
+
+    if (!child || !child.pid) {
+      return { error: steps.join('\n') + '\n[致命] spawn 返回空或 pid 不存在' };
+    }
+    steps.push(step(`spawn 成功, pid=${child.pid}`));
+
+    // 检查进程是否立即退出，退出时通知渲染进程
+    let exitedEarly = false;
+    child.on('close', (code) => {
+      if (!exitedEarly) steps.push(step(`进程退出, code=${code}`));
+      mcpSessions.delete(serverId);
+      // 通知渲染进程服务器已崩溃/退出
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('mcp:crashed', serverId);
+      }
+    });
+    child.on('error', (err) => {
+      steps.push(step(`spawn error: ${err.message}`));
+      mcpSessions.delete(serverId);
+    });
+
+    // 收集 stderr 和 stdout 原始数据
+    let stderrLog = '';
+    let stdoutRaw = '';
+    let stdoutFrames = 0;
+    child.stderr!.on('data', (d: any) => {
+      const text = d.toString();
+      stderrLog += text;
+      if (stderrLog.length < 600) steps.push(step(`stderr(${d.length}B): ${text.trim().slice(0, 150)}`));
+    });
+    child.stdout!.on('data', (d: any) => {
+      stdoutRaw += d.toString();
+      if (stdoutRaw.length < 300) steps.push(step(`stdout raw(${d.length}B): ${d.toString().trim().slice(0, 120)}`));
+    });
+
+    // 等待 stderr 中的就绪信号或超时（替代固定 2s 等待）
+    steps.push(step('等待 stderr 就绪信号...'));
+    const serverReady = new Promise<void>((resolve) => {
+      const check = () => {
+        if (stderrLog.includes('running on stdio')) {
+          resolve();
+        }
+      };
+      // 每次收到 stderr 数据时检查
+      child!.stderr!.on('data', check);
+      // 也检查已收到的数据
+      check();
+      if (stderrLog.includes('running on stdio')) resolve();
+    });
+    const timeout30s = new Promise<void>((resolve) => setTimeout(() => resolve(), 30000));
+    const procExit = new Promise<void>((resolve) => {
+      child!.on('close', () => { exitedEarly = true; resolve(); });
+    });
+
+    await Promise.race([serverReady, timeout30s, procExit]);
+
+    if (exitedEarly) {
+      return { error: steps.join('\n') + '\n[stderr] ' + stderrLog.slice(-400) };
+    }
+    steps.push(step(`进程存活确认, stderr 已收 ${stderrLog.length}B, stdout ${stdoutRaw.length}B`));
+
+    const session: McpSession = {
+      process: child, serverId, requestId: 1, pending: new Map(), tools: [],
+    };
+    mcpSessions.set(serverId, session);
+
+    // 设置 stdout NDJSON 行解析器
+    let buffer = '';
+    child.stdout!.on('data', (d: any) => {
+      buffer += d.toString();
+      while (true) {
+        const nl = buffer.indexOf('\n');
+        if (nl === -1) break;
+        const line = buffer.slice(0, nl).replace(/\r$/, '');
+        buffer = buffer.slice(nl + 1);
+        if (!line) continue; // 跳过空行
+        stdoutFrames++;
+        try {
+          const msg = JSON.parse(line);
+          if (msg.id != null && session.pending.has(msg.id)) {
+            const { resolve, reject } = session.pending.get(msg.id)!;
+            session.pending.delete(msg.id);
+            if (msg.error) reject(new Error(msg.error.message || 'MCP error'));
+            else resolve(msg.result);
+          }
+        } catch {}
+      }
+    });
+
+    // MCP 初始化握手
+    steps.push(step('发送 initialize...'));
+    try {
+      const initResult = await mcpSend(session, 'initialize', {
+        protocolVersion: '2024-11-05',
+        capabilities: {},
+        clientInfo: { name: 'devwhale', version: '0.2.0' },
+      });
+      steps.push(step(`initialize 成功, 收到 ${stdoutFrames} 帧`));
+      mcpNotify(session, 'notifications/initialized', {});
+
+      const toolsResult = await mcpSend(session, 'tools/list', {});
+      session.tools = toolsResult?.tools || [];
+      steps.push(step(`tools/list 成功, ${session.tools.length} 个工具`));
+
+      return { serverId, tools: session.tools };
+    } catch (innerErr: any) {
+      steps.push(step(`握手失败: ${innerErr.message}`));
+      try { child.kill(); } catch {}
+      mcpSessions.delete(serverId);
+      const diag = [
+        ...steps,
+        `[stdout 原始 ${stdoutRaw.length}B] ${stdoutRaw.slice(-200)}`,
+        `[stderr ${stderrLog.length}B] ${stderrLog.slice(-400)}`,
+      ].join('\n');
+      return { error: diag };
+    }
+  } catch (e: any) {
+    steps.push(step(`异常: ${e.message}`));
+    if (child) { try { child.kill(); } catch {} }
+    return { error: steps.join('\n') };
+  }
+});
+
+ipcMain.handle('mcp:request', async (_e, serverId: string, method: string, params: any) => {
+  const s = mcpSessions.get(serverId);
+  if (!s) return { error: 'MCP session not found' };
+  try { return { result: await mcpSend(s, method, params) }; }
+  catch (e: any) { return { error: e.message }; }
+});
+
+ipcMain.handle('mcp:stop', async (_e, serverId: string) => {
+  const s = mcpSessions.get(serverId);
+  if (s) { s.process.kill(); mcpSessions.delete(serverId); }
+});
+
+function mcpSend(session: McpSession, method: string, params: any): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const id = session.requestId++;
+    // MCP SDK (2025+) 使用 NDJSON（换行分隔 JSON），不再使用 Content-Length 头
+    const msg = JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n';
+    session.pending.set(id, { resolve, reject });
+    session.process.stdin!.write(msg);
+    setTimeout(() => {
+      if (session.pending.has(id)) { session.pending.delete(id); reject(new Error('MCP 超时（60s）')); }
+    }, 60000);
+  });
+}
+
+function mcpNotify(session: McpSession, method: string, params: any) {
+  // 通知消息同样使用 NDJSON 格式（MCP 协议不要求通知有响应）
+  const msg = JSON.stringify({ jsonrpc: '2.0', method, params }) + '\n';
+  session.process.stdin!.write(msg);
+}
+
 // Debugger
 interface DebugSession {
   process: ReturnType<typeof spawn>;
@@ -267,7 +452,7 @@ ipcMain.handle('debug:start', async (event, debugId: string, scriptPath: string,
     let wsUrl = '';
     let started = false;
     let stderrBuf = '';
-    child.stderr.on('data', (d: any) => {
+    child.stderr!.on('data', (d: any) => {
       const text = d.toString();
       stderrBuf += text;
       // 累积 stderr 防止 WebSocket URL 跨多次 data 事件
@@ -417,7 +602,7 @@ function extractDocxText(filePath: string): string | null {
     const platform = os.platform();
     let xml = '';
     if (platform === 'win32') {
-      const safePath = filePath.replace(/'/g, "''");
+      const safePath = filePath.replace(/'/g, "''").replace(/[\x00-\x1f\x7f]/g, '');
       const psScript = `Add-Type -AssemblyName System.IO.Compression.FileSystem; $zip = [System.IO.Compression.ZipFile]::OpenRead('${safePath}'); $entry = $zip.GetEntry('word/document.xml'); if ($entry) { $stream = $entry.Open(); $reader = New-Object System.IO.StreamReader($stream); $reader.ReadToEnd(); $reader.Close() }; $zip.Dispose()`;
       xml = execSync(`powershell -NoProfile -Command "${psScript}"`, { encoding: 'utf-8', timeout: 10000 });
     } else {
@@ -446,7 +631,7 @@ function extractXlsxText(filePath: string): string | null {
     const platform = os.platform();
     let output = '';
     if (platform === 'win32') {
-      const safePath = filePath.replace(/'/g, "''");
+      const safePath = filePath.replace(/'/g, "''").replace(/[\x00-\x1f\x7f]/g, '');
       const psScript = `Add-Type -AssemblyName System.IO.Compression.FileSystem; $zip = [System.IO.Compression.ZipFile]::OpenRead('${safePath}'); function RE($n) { $e=$zip.GetEntry($n); if($e){$s=$e.Open();$r=New-Object System.IO.StreamReader($s);$t=$r.ReadToEnd();$r.Close();return $t} return '' }; $ss = RE('xl/sharedStrings.xml'); $sh = RE('xl/worksheets/sheet1.xml'); $zip.Dispose(); Write-Output \"STRINGS:$ss\"; Write-Output \"SHEET:$sh\"`;
       output = execSync(`powershell -NoProfile -Command "${psScript}"`, { encoding: 'utf-8', timeout: 10000 });
     } else {

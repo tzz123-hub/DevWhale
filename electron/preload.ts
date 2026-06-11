@@ -44,6 +44,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('lsp:diagnostics', serverId, filePath),
   stopLsp: (serverId: string) => ipcRenderer.invoke('lsp:stop', serverId),
 
+  // MCP
+  startMcp: (command: string, args: string[], cwd?: string) =>
+    ipcRenderer.invoke('mcp:start', command, args, cwd),
+  mcpRequest: (serverId: string, method: string, params: any) =>
+    ipcRenderer.invoke('mcp:request', serverId, method, params),
+  stopMcp: (serverId: string) =>
+    ipcRenderer.invoke('mcp:stop', serverId),
+  onMcpCrashed: (callback: (serverId: string) => void) => {
+    const handler = (_event: any, serverId: string) => callback(serverId);
+    ipcRenderer.on('mcp:crashed', handler);
+    return () => ipcRenderer.removeListener('mcp:crashed', handler);
+  },
+
   // 调试器
   startDebug: (debugId: string, scriptPath: string, cwd: string) =>
     ipcRenderer.invoke('debug:start', debugId, scriptPath, cwd),

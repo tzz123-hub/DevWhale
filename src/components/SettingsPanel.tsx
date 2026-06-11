@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { loadChatSettings, saveChatSettings, loadRulesMemory, saveRulesMemory, loadGeneralPreferences, saveGeneralPreferences, loadProvider, saveProvider, saveProviderApiKey, getProviderConfig, loadSelectedModel, saveSelectedModel, loadUsername, saveUsername, loadEnabledSkills, saveEnabledSkills, loadShowRecommendations, saveShowRecommendations, BUILTIN_SKILLS, getAllSkills, type ChatSettings, type ChatDensity, type CodeTheme, type RulesMemory, type RuleItem, type GeneralPreferences, type LinkOpenMode, type ProviderId } from '../lib/storage';
 import { getCurrentProjectPath } from '../lib/tools';
@@ -923,6 +923,20 @@ function McpSettings() {
   const [form, setForm] = useState({ name: '', command: '', args: '' });
   const [runningIds, setRunningIds] = useState<Set<string>>(new Set());
   const [mcpErrors, setMcpErrors] = useState<Record<string, string>>({});
+  const [startingIds, setStartingIds] = useState<Set<string>>(new Set());
+  const [toolInfos, setToolInfos] = useState<Record<string, Array<{ name: string; description: string }>>>({});
+
+  // 监听主进程的 MCP 崩溃通知
+  useEffect(() => {
+    const api = (window as any).electronAPI;
+    if (!api?.onMcpCrashed) return;
+    const unsub = api.onMcpCrashed((serverId: string) => {
+      setRunningIds((prev) => { const n = new Set(prev); n.delete(serverId); return n; });
+      setToolInfos((prev) => { const n = { ...prev }; delete n[serverId]; return n; });
+      setMcpErrors((prev) => ({ ...prev, [serverId]: '服务器进程意外退出' }));
+    });
+    return unsub;
+  }, []);
 
   const save = (serversList: typeof servers) => {
     setServers(serversList);
@@ -961,8 +975,8 @@ function McpSettings() {
         {servers.length > 0 && (
           <div className="space-y-2 mb-4">
             {servers.map((s) => (
+              <div key={s.id}>
               <div
-                key={s.id}
                 className="flex items-center gap-3 p-3 rounded-xl border border-surface-200 bg-surface-0"
               >
                 <div className="flex-1 min-w-0">
@@ -975,32 +989,45 @@ function McpSettings() {
                 {runningIds.has(s.id) ? (
                   <span className="text-[10px] text-success font-medium flex items-center gap-1 shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                    运行中
+                    运行中{toolInfos[s.id] ? ` · ${toolInfos[s.id].length}工具` : ''}
+                  </span>
+                ) : startingIds.has(s.id) ? (
+                  <span className="text-[10px] text-accent font-medium flex items-center gap-1 shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    启动中...
                   </span>
                 ) : mcpErrors[s.id] ? (
-                  <span className="text-[10px] text-danger font-medium shrink-0" title={mcpErrors[s.id]}>启动失败</span>
+                  <span className="text-[10px] text-danger font-medium shrink-0 max-w-[160px] truncate">{mcpErrors[s.id]}</span>
                 ) : null}
                 {/* 启动/停止按钮 */}
                 {runningIds.has(s.id) ? (
                   <button
-                    onClick={() => { stopMcpServer(s.id); setRunningIds((prev) => { const n = new Set(prev); n.delete(s.id); return n; }); }}
+                    onClick={() => {
+                      stopMcpServer(s.id);
+                      setRunningIds((prev) => { const n = new Set(prev); n.delete(s.id); return n; });
+                      setToolInfos((prev) => { const n = { ...prev }; delete n[s.id]; return n; });
+                    }}
                     className="shrink-0 px-2 py-1 text-[10px] font-medium bg-amber-500/10 text-amber-600 rounded hover:bg-amber-500/20 transition-colors"
                   >停止</button>
                 ) : (
                   <button
                     onClick={async () => {
                       setMcpErrors((prev) => { const n = { ...prev }; delete n[s.id]; return n; });
+                      setStartingIds((prev) => new Set(prev).add(s.id));
                       try {
-                        const tools = await startMcpServer(s);
+                        const { tools } = await startMcpServer(s);
                         setRunningIds((prev) => new Set(prev).add(s.id));
+                        setToolInfos((prev) => ({ ...prev, [s.id]: tools.map(t => ({ name: t.name, description: t.description })) }));
                         if (tools.length === 0) setMcpErrors((prev) => ({ ...prev, [s.id]: '无可用工具' }));
                       } catch (e: any) {
                         setMcpErrors((prev) => ({ ...prev, [s.id]: e.message }));
+                      } finally {
+                        setStartingIds((prev) => { const n = new Set(prev); n.delete(s.id); return n; });
                       }
                     }}
-                    disabled={!s.enabled}
+                    disabled={!s.enabled || startingIds.has(s.id)}
                     className="shrink-0 px-2 py-1 text-[10px] font-medium bg-accent/10 text-accent rounded hover:bg-accent/20 disabled:opacity-30 transition-colors"
-                  >启动</button>
+                  >{startingIds.has(s.id) ? '...' : '启动'}</button>
                 )}
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -1020,6 +1047,23 @@ function McpSettings() {
                   </svg>
                 </button>
               </div>
+              {/* 工具列表（运行时展开） */}
+              {runningIds.has(s.id) && toolInfos[s.id] && toolInfos[s.id].length > 0 && (
+                <div className="mt-2 pt-2 border-t border-surface-100">
+                  <div className="flex flex-wrap gap-1">
+                    {toolInfos[s.id].map((t) => (
+                      <span
+                        key={t.name}
+                        title={t.description}
+                        className="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-100 text-[10px] text-surface-600 font-mono"
+                      >
+                        {t.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              </div>
             ))}
           </div>
         )}
@@ -1029,12 +1073,12 @@ function McpSettings() {
           <div className="text-xs font-medium text-surface-600 mb-2">MCP 市场 · 一键安装</div>
           <div className="grid grid-cols-2 gap-1.5">
             {[
-              { name: 'Filesystem', cmd: 'npx', args: '-y @anthropic-ai/mcp-server-filesystem .', desc: '读写本地文件' },
-              { name: 'GitHub', cmd: 'npx', args: '-y @anthropic-ai/mcp-server-github', desc: '仓库/PR/Issue 操作', needToken: true },
-              { name: 'PostgreSQL', cmd: 'npx', args: '-y @anthropic-ai/mcp-server-postgres', desc: '数据库查询', needConnStr: true },
-              { name: 'Slack', cmd: 'npx', args: '-y @anthropic-ai/mcp-server-slack', desc: '消息/频道管理', needToken: true },
-              { name: 'Brave Search', cmd: 'npx', args: '-y @anthropic-ai/mcp-server-brave-search', desc: '网页搜索', needToken: true },
-              { name: 'Puppeteer', cmd: 'npx', args: '-y @anthropic-ai/mcp-server-puppeteer', desc: '浏览器自动化' },
+              { name: 'Filesystem', cmd: 'npx', args: '-y @modelcontextprotocol/server-filesystem .', desc: '读写本地文件' },
+              { name: 'GitHub', cmd: 'npx', args: '-y @modelcontextprotocol/server-github', desc: '仓库/PR/Issue 操作', needToken: true },
+              { name: 'PostgreSQL', cmd: 'npx', args: '-y @modelcontextprotocol/server-postgres', desc: '数据库查询', needConnStr: true },
+              { name: 'Slack', cmd: 'npx', args: '-y @modelcontextprotocol/server-slack', desc: '消息/频道管理', needToken: true },
+              { name: 'Brave Search', cmd: 'npx', args: '-y @modelcontextprotocol/server-brave-search', desc: '网页搜索', needToken: true },
+              { name: 'Puppeteer', cmd: 'npx', args: '-y @modelcontextprotocol/server-puppeteer', desc: '浏览器自动化' },
             ].map((preset) => (
               <button
                 key={preset.name}
@@ -1096,11 +1140,7 @@ function McpSettings() {
         </div>
       </Section>
 
-      <Section title="MCP 市场（即将推出）">
-        <p className="text-xs text-surface-400">
-          后续版本将提供 MCP 服务器一键安装市场，包括 Filesystem、GitHub、PostgreSQL、Slack 等常用服务器。
-        </p>
-      </Section>
+
     </div>
   );
 }

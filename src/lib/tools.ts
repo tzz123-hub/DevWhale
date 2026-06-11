@@ -5,7 +5,7 @@
 import { writeTextFile, readTextFile, isTauri } from './tauriFs';
 import { execCommand, listDirectory, readFileContent, writeFileContent } from './shell';
 import { createCheckpoint, setCheckpointProjectRoot } from './checkpoint';
-import { callMcpTool } from './mcp';
+import { callMcpTool, getAllMcpTools } from './mcp';
 
 /** 当前项目根路径（由 App.tsx 动态设置） */
 let currentProjectPath = '';
@@ -89,7 +89,7 @@ async function tauriEdit(path: string, search: string, replace: string): Promise
     if (!original.includes(search)) {
       return `未找到匹配文字 "${search.slice(0, 80)}..."`;
     }
-    const modified = original.replace(search, replace);
+    const modified = original.replaceAll(search, replace);
     return await tauriWrite(path, modified);
   } catch (e: any) {
     return `【失败】${e.message || e}`;
@@ -458,18 +458,23 @@ async function tauriWebFetch(url: string): Promise<string> {
 /** Agent 工具调度器 */
 export async function executeToolCall(name: string, args: any): Promise<string> {
   // MCP 工具路由：mcp_<serverId>_<toolName>
+  // 通过已注册会话精确匹配 serverId（支持 serverId 含下划线）
   if (name.startsWith('mcp_')) {
-    const parts = name.slice(4).split('_');
-    if (parts.length >= 2) {
-      const serverId = parts[0];
-      const toolName = parts.slice(1).join('_');
-      try {
-        return await callMcpTool(serverId, toolName, args);
-      } catch (e: any) {
-        return `【失败】MCP：${e.message || e}`;
+    const registered = getAllMcpTools();
+    for (const { serverId, tools } of registered) {
+      for (const tool of tools) {
+        const fullName = `mcp_${serverId}_${tool.name}`;
+        if (name === fullName) {
+          try {
+            return await callMcpTool(serverId, tool.name, args);
+          } catch (e: any) {
+            return `【失败】MCP：${e.message || e}`;
+          }
+        }
       }
     }
-    return `无效的 MCP 工具名: ${name}`;
+    // 未匹配到任何注册工具
+    return `【失败】MCP 工具未注册: ${name}`;
   }
 
   switch (name) {
@@ -490,3 +495,6 @@ export async function executeToolCall(name: string, args: any): Promise<string> 
     default: return `未知工具: ${name}`;
   }
 }
+
+// === 测试导出 ===
+export const __test = { isAbsolutePath, resolvePath };
