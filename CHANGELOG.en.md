@@ -1,5 +1,19 @@
 # DevWhale Changelog
 
+## [2026-06-11] Bug Fixes: Shell Encoding + Platform Detection
+
+### Shell Encoding Fixes
+- **PowerShell GBK garbled output**: `shell: false` direct spawn + `[Console]::OutputEncoding=[Text.Encoding]::UTF8` to force UTF-8 output
+- **cmd.exe garbled output**: `chcp 65001 >nul` code page switch
+- **`listDirectory` platform detection**: changed to try PowerShell first, fallback to bash (no longer relies on `detectPlatform()` cache)
+
+### Message Bubble Action Buttons
+- New copy / retry / delete buttons (shown on hover)
+- Delete: filters message from list; Retry: removes old message + re-sends original content
+
+### Tool Name Fix
+- Idle streak termination message tool names fixed from `(?, ?)` to actual tool names
+
 ## [2026-06-11] MCP (Model Context Protocol) Implementation
 
 ### New Features
