@@ -73,22 +73,27 @@ ipcMain.handle('shell:exec', async (_e, command: string, args: string[], options
       let finalCommand = command;
       let finalArgs = [...args];
       if (platform === 'win32' && command !== 'powershell') {
-        // Windows: 非 PowerShell 命令用 cmd.exe 执行（兼容 dir/type 等 cmd 内置命令）
-        finalArgs = ['/d', '/c', command, ...args];
+        // Windows: 非 PowerShell 命令用 cmd.exe + chcp 65001 解决 GBK 乱码
+        finalArgs = ['/d', '/c', 'chcp', '65001', '>nul', '&&', command, ...args];
         finalCommand = 'cmd.exe';
+      } else if (platform === 'win32' && command === 'powershell') {
+        // PowerShell: 强制 UTF-8 输出
+        finalArgs = ['-NoProfile', '-Command', '[Console]::OutputEncoding=[Text.Encoding]::UTF8;' + args.slice(2).join(' ')];
+        finalCommand = 'powershell';
+        args = []; // 避免重复使用
       } else if (command !== 'bash' && command !== 'sh') {
         finalArgs = ['-lc', [command, ...args].join(' ')];
         finalCommand = 'bash';
       }
-      const child = spawn(finalCommand, finalArgs, {
+      const child = spawn(finalCommand, finalArgs.length ? finalArgs : args, {
         cwd: options?.cwd || process.cwd(),
         shell: true,
         env: { ...process.env, LANG: 'en_US.UTF-8' },
       });
       let stdout = '';
       let stderr = '';
-      child.stdout!.on('data', (d: any) => { stdout += d.toString(); });
-      child.stderr!.on('data', (d: any) => { stderr += d.toString(); });
+      child.stdout!.on('data', (d: any) => { stdout += d.toString('utf8'); });
+      child.stderr!.on('data', (d: any) => { stderr += d.toString('utf8'); });
       child.on('close', (code: number | null) => {
         if (code === 0) resolve({ success: true, data: stdout });
         else resolve({ success: false, error: stderr || 'exit ' + code, data: stdout });
@@ -105,20 +110,25 @@ ipcMain.on('shell:execStreaming', (event, requestId: string, command: string, ar
     let finalCommand = command;
     let finalArgs = [...args];
     if (platform === 'win32' && command !== 'powershell') {
-      // Windows: 非 PowerShell 命令用 cmd.exe 执行（兼容 dir/type 等 cmd 内置命令）
-      finalArgs = ['/d', '/c', command, ...args];
+      // Windows: 非 PowerShell 命令用 cmd.exe + chcp 65001
+      finalArgs = ['/d', '/c', 'chcp', '65001', '>nul', '&&', command, ...args];
       finalCommand = 'cmd.exe';
+    } else if (platform === 'win32' && command === 'powershell') {
+      // PowerShell: 强制 UTF-8 输出
+      finalArgs = ['-NoProfile', '-Command', '[Console]::OutputEncoding=[Text.Encoding]::UTF8;' + args.slice(2).join(' ')];
+      finalCommand = 'powershell';
+      args = [];
     } else if (command !== 'bash' && command !== 'sh') {
       finalArgs = ['-lc', [command, ...args].join(' ')];
       finalCommand = 'bash';
     }
-    const child = spawn(finalCommand, finalArgs, {
+    const child = spawn(finalCommand, finalArgs.length ? finalArgs : args, {
       cwd: options?.cwd || process.cwd(),
       shell: true,
       env: { ...process.env, LANG: 'en_US.UTF-8' },
     });
-    child.stdout.on('data', (d: any) => event.sender.send('shell:stream:' + requestId, { type: 'stdout', data: d.toString() }));
-    child.stderr.on('data', (d: any) => event.sender.send('shell:stream:' + requestId, { type: 'stderr', data: d.toString() }));
+    child.stdout.on('data', (d: any) => event.sender.send('shell:stream:' + requestId, { type: 'stdout', data: d.toString('utf8') }));
+    child.stderr.on('data', (d: any) => event.sender.send('shell:stream:' + requestId, { type: 'stderr', data: d.toString('utf8') }));
     child.on('close', (code: number | null) => event.sender.send('shell:stream:' + requestId, { type: 'close', code }));
     child.on('error', (err: Error) => event.sender.send('shell:stream:' + requestId, { type: 'error', message: err.message }));
   } catch (e: any) { event.sender.send('shell:stream:' + requestId, { type: 'error', message: e.message }); }
