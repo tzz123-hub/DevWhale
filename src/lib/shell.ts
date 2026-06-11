@@ -85,11 +85,11 @@ export async function listFilesRecursive(dirPath: string): Promise<string> {
   if (platform === 'windows') {
     return execCommand('powershell', [
       '-NoProfile', '-Command',
-      `Get-ChildItem -Path '${dirPath.replace(/'/g, "''")}' -Recurse -File -Name -ErrorAction SilentlyContinue | Where-Object { $_ -notmatch 'node_modules|target|\\.git|dist' } | ForEach-Object { $_ -replace '\\\\', '/' }`
+      `Get-ChildItem -Path '${dirPath.replace(/'/g, "''")}' -Recurse -File -Name -ErrorAction SilentlyContinue | Where-Object { $_ -notmatch 'node_modules|target|\\.git|(^|/)dist(/|$)' } | ForEach-Object { $_ -replace '\\\\', '/' }`
     ]);
   }
   return execCommand('bash', ['-lc',
-    `find '${dirPath.replace(/'/g, "'\\''")}' -type f 2>/dev/null | grep -v -E 'node_modules|target|\\.git|dist' | sed 's|${dirPath.replace(/'/g, "'\\''")}/||' | sort`
+    `find '${dirPath.replace(/'/g, "'\\''")}' -type f 2>/dev/null | grep -v -E 'node_modules|target|\\.git|(^|/)dist(/|$)' | sed 's|${dirPath.replace(/'/g, "'\\''")}/||' | sort`
   ]);
 }
 

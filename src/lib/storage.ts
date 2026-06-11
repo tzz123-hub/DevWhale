@@ -250,7 +250,10 @@ export const BUILTIN_SKILLS: SkillItem[] = [
 export function loadEnabledSkills(): string[] {
   try {
     const raw = localStorage.getItem('devwhale-enabled-skills');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
   } catch {}
   // 首次使用：默认启用所有内置 skill
   const defaultIds = BUILTIN_SKILLS.map(s => s.id);

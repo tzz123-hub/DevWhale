@@ -76,7 +76,7 @@ ipcMain.handle('shell:exec', async (_e, command: string, args: string[], options
         // Windows: 用 cmd.exe 执行（兼容 dir/type 等 cmd 内置命令）
         finalArgs = ['/d', '/c', command, ...args];
         finalCommand = 'cmd.exe';
-      } else if (platform !== 'win32' && command !== 'bash' && command !== 'sh') {
+      } else if (command !== 'bash' && command !== 'sh') {
         finalArgs = ['-lc', [command, ...args].join(' ')];
         finalCommand = 'bash';
       }
@@ -108,7 +108,7 @@ ipcMain.on('shell:execStreaming', (event, requestId: string, command: string, ar
       // Windows: 用 cmd.exe 执行（兼容 dir/type 等 cmd 内置命令）
       finalArgs = ['/d', '/c', command, ...args];
       finalCommand = 'cmd.exe';
-    } else if (platform !== 'win32' && command !== 'bash' && command !== 'sh') {
+    } else if (command !== 'bash' && command !== 'sh') {
       finalArgs = ['-lc', [command, ...args].join(' ')];
       finalCommand = 'bash';
     }

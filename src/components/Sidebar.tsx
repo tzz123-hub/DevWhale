@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Conversation, Project, Mode } from '../types/chat';
 import { cn, formatTime } from '../lib/utils';
 import { useTheme } from '../hooks/useTheme';
@@ -51,7 +51,12 @@ export function Sidebar({
   onCreateProject,
   onRenameProject,
 }: SidebarProps) {
-  const [collapsedProjects, setCollapsedProjects] = useState<Record<string, boolean>>({});
+  const [collapsedProjects, setCollapsedProjects] = useState<Record<string, boolean>>(() => {
+    try { const raw = localStorage.getItem('devwhale-collapsed-projects'); return raw ? JSON.parse(raw) : {}; } catch { return {}; }
+  });
+  useEffect(() => {
+    localStorage.setItem('devwhale-collapsed-projects', JSON.stringify(collapsedProjects));
+  }, [collapsedProjects]);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');

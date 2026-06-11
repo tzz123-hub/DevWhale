@@ -17,7 +17,7 @@ interface DiffViewerProps {
   fileName?: string;
 }
 
-function parseUnifiedDiff(text: string): { fileName: string; hunks: DiffHunk[] } {
+export function parseUnifiedDiff(text: string): { fileName: string; hunks: DiffHunk[] } {
   const lines = text.split('\n');
   const hunks: DiffHunk[] = [];
   let currentHunk: DiffHunk | null = null;
