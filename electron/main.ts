@@ -85,9 +85,10 @@ ipcMain.handle('shell:exec', async (_e, command: string, args: string[], options
         finalArgs = ['-lc', [command, ...args].join(' ')];
         finalCommand = 'bash';
       }
+      const useShell = finalCommand !== 'powershell'; // PowerShell 直接 spawn，不走 shell 避免编码被 cmd.exe 覆盖
       const child = spawn(finalCommand, finalArgs.length ? finalArgs : args, {
         cwd: options?.cwd || process.cwd(),
-        shell: true,
+        shell: useShell,
         env: { ...process.env, LANG: 'en_US.UTF-8' },
       });
       let stdout = '';
@@ -114,7 +115,7 @@ ipcMain.on('shell:execStreaming', (event, requestId: string, command: string, ar
       finalArgs = ['/d', '/c', 'chcp', '65001', '>nul', '&&', command, ...args];
       finalCommand = 'cmd.exe';
     } else if (platform === 'win32' && command === 'powershell') {
-      // PowerShell: 强制 UTF-8 输出
+      // PowerShell: 强制 UTF-8 输出，直接 spawn 不经过 shell
       finalArgs = ['-NoProfile', '-Command', '[Console]::OutputEncoding=[Text.Encoding]::UTF8;' + args.slice(2).join(' ')];
       finalCommand = 'powershell';
       args = [];
@@ -122,9 +123,10 @@ ipcMain.on('shell:execStreaming', (event, requestId: string, command: string, ar
       finalArgs = ['-lc', [command, ...args].join(' ')];
       finalCommand = 'bash';
     }
+    const useShell = finalCommand !== 'powershell';
     const child = spawn(finalCommand, finalArgs.length ? finalArgs : args, {
       cwd: options?.cwd || process.cwd(),
-      shell: true,
+      shell: useShell,
       env: { ...process.env, LANG: 'en_US.UTF-8' },
     });
     child.stdout.on('data', (d: any) => event.sender.send('shell:stream:' + requestId, { type: 'stdout', data: d.toString('utf8') }));
