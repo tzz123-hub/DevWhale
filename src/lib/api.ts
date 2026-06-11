@@ -427,7 +427,7 @@ export async function agentChat(
       for (const tc of tcs) {
         const r = results.find((r) => r.id === tc.id);
         if (r) {
-          messages.push({ role: 'tool', content: r.result, tool_call_id: tc.id } as any);
+          messages.push({ role: 'tool', content: r.result, tool_call_id: tc.id, name: tc.function.name } as any);
         }
       }
       continue;
