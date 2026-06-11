@@ -703,7 +703,7 @@ function App() {
                       ? { ...c, messages: c.messages.filter((m) => m.id !== msgId), updatedAt: Date.now() }
                       : c)
                   );
-                  handleSend(msg.content, msg.files?.map((f) => f.content).filter(Boolean) as string[] | undefined);
+                  handleSend(msg.content);
                 }
               }}
             />
