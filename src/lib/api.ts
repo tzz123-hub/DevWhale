@@ -11,7 +11,7 @@ import { buildProjectIndex } from './indexer';
 import { readFileContent } from './shell';
 
 /* ====== stableStringify ====== */
-function stableStringify(obj: any): string {
+function stableStringify(obj: unknown): string {
   if (obj === undefined) return 'null';
   if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
   if (Array.isArray(obj)) return '[' + obj.map(stableStringify).join(',') + ']';
@@ -34,7 +34,7 @@ export interface ChatMessage {
 
 export interface ToolProgress {
   toolName: string;
-  args: any;
+  args: Record<string, unknown>;
   status: 'running' | 'ok' | 'fail';
   result?: string;
 }
@@ -42,7 +42,7 @@ export interface ToolProgress {
 export interface AgentCallbacks {
   onToken: (token: string) => void;
   onProgress: (progress: ToolProgress) => void;
-  onToolCall: (name: string, args: any) => Promise<string>;
+  onToolCall: (name: string, args: Record<string, unknown>) => Promise<string>;
   onDone: (usage: { prompt: number; completion: number; cacheHit: number; cacheMiss: number } | null) => void;
   onError: (err: string) => void;
   onCancelled?: () => void;
@@ -223,7 +223,7 @@ async function buildSystem(projectPath: string): Promise<string> {
   return parts.join('\n');
 }
 
-function makeUsage(raw: any) {
+function makeUsage(raw: Record<string, unknown> | null) {
   if (!raw) return null;
   return {
     prompt: raw.prompt_tokens ?? 0,
@@ -252,7 +252,7 @@ export async function agentChat(
   callbacks.onToken('⏳ ');
   let system: string;
   try { system = await buildSystem(projectPath); }
-  catch (e: any) { callbacks.onToken(`\n\n---\n❌ **System Prompt 构建失败**\n原因：${e.message}\n建议：检查项目路径是否有效`); return; }
+  catch (e: unknown) { callbacks.onToken(`\n\n---\n❌ **System Prompt 构建失败**\n原因：${e instanceof Error ? e.message : String(e)}\n建议：检查项目路径是否有效`); return; }
 
   // 构建用户消息（支持图片）
   const userMsg: ChatMessage = { role: 'user', content: newUserMessage };
@@ -267,7 +267,7 @@ export async function agentChat(
   callbacks.onToken('');
 
   type ToolDelta = { index: number; id?: string; type?: 'function'; function?: { name?: string; arguments?: string } };
-  let lastUsage: any = null;
+  let lastUsage: Record<string, unknown> | null = null;
   let idleStreak = 0; // 连续无实质操作计数
   const PRODUCTIVE_TOOLS = new Set(['write_file', 'edit_file', 'exec_command']);
   const MAX_CONTEXT_CHARS = 700_000; // ~800K tokens 的安全边界
@@ -286,13 +286,13 @@ export async function agentChat(
 
     // 终止条件 2：连续空转
     if (idleStreak >= 5) {
-      const lastTools = messages.slice(-3).filter(m => m.role === 'tool').map(m => (m as any).name || '?').join(', ');
+      const lastTools = messages.slice(-3).filter(m => m.role === 'tool').map(m => (m as ChatMessage).name || '?').join(', ');
       const msg = `\n\n---\n⚠️ **Agent 自动终止**\n原因：连续 ${idleStreak} 轮无实质操作\n详情：最近只调用了读取类工具（${lastTools || '无'}），没有写文件/编辑/执行命令\n建议：明确告诉 AI 要改哪个文件、做什么改动`;
       callbacks.onToken(msg);
       callbacks.onDone(makeUsage(lastUsage));
       return;
     }
-    let res: Response = null as any;
+    let res: Response | null = null;
     let fetchError = '';
     // Electron 的 fetch 偶发失败，重试 3 次
     for (let fetchRetry = 0; fetchRetry < 3; fetchRetry++) {
@@ -326,8 +326,8 @@ export async function agentChat(
         });
         fetchError = '';
         break;
-      } catch (e: any) {
-        fetchError = e.message;
+      } catch (e: unknown) {
+        fetchError = e instanceof Error ? e.message : String(e);
         if (fetchRetry < 2) await new Promise(r => setTimeout(r, 1000 * (fetchRetry + 1)));
       }
     }
@@ -344,13 +344,13 @@ export async function agentChat(
     let buffer = '';
     const toolAcc = new Map<number, ToolDelta>();
     let finishReason: string | null = null;
-    let usage: any = null;
+    let usage: Record<string, unknown> | null = null;
 
     // 流式读取
     while (true) {
       if (signal?.aborted) { callbacks.onToken('\n\n⏹ 已停止'); callbacks.onCancelled?.(); return; }
       let chunk: ReadableStreamReadResult<Uint8Array>;
-      try { chunk = await reader.read(); } catch (e: any) { callbacks.onToken(`\n\n---\n❌ **流读取中断**\n原因：${e.message}\n建议：网络波动，重试`); return; }
+      try { chunk = await reader.read(); } catch (e: unknown) { callbacks.onToken(`\n\n---\n❌ **流读取中断**\n原因：${e instanceof Error ? e.message : String(e)}\n建议：网络波动，重试`); return; }
       if (chunk.done) break;
       buffer += decoder.decode(chunk.value, { stream: true });
       const lines = buffer.split('\n');
@@ -379,13 +379,13 @@ export async function agentChat(
     // 检查 tool_calls
     if (finishReason === 'tool_calls' && toolAcc.size > 0) {
       const tcs = Array.from(toolAcc.values()).map(tc => ({ id: tc.id || '', type: 'function' as const, function: { name: tc.function?.name || '', arguments: tc.function?.arguments || '{}' } }));
-      messages.push({ role: 'assistant', content: null, tool_calls: tcs } as any);
+      messages.push({ role: 'assistant', content: null, tool_calls: tcs } as ChatMessage);
 
       // task_complete 优先处理（单次循环）
       const completeTc = tcs.find((tc) => tc.function.name === 'task_complete');
       if (completeTc) {
-        let args: any = {}; try { args = JSON.parse(completeTc.function.arguments); } catch {}
-        callbacks.onToken('\n\n✅ ' + (args.summary || '任务完成'));
+        let args: Record<string, unknown> = {}; try { args = JSON.parse(completeTc.function.arguments); } catch {}
+        callbacks.onToken('\n\n✅ ' + (String(args.summary || '任务完成')));
         callbacks.onDone(makeUsage(usage));
         return;
       }
@@ -402,13 +402,13 @@ export async function agentChat(
       }
 
       for (const tc of nonCompleteTcs) {
-        let args: any = {}; try { args = JSON.parse(tc.function.arguments); } catch {}
+        let args: Record<string, unknown> = {}; try { args = JSON.parse(tc.function.arguments); } catch {}
         callbacks.onProgress({ toolName: tc.function.name, args, status: 'running' });
       }
 
       // 并行执行所有工具
       const results = await Promise.all(nonCompleteTcs.map(async (tc) => {
-        let args: any = {}; try { args = JSON.parse(tc.function.arguments); } catch {}
+        let args: Record<string, unknown> = {}; try { args = JSON.parse(tc.function.arguments); } catch {}
         let result = '';
         for (let retry = 0; retry < 3; retry++) {
           result = await callbacks.onToolCall(tc.function.name, args);
@@ -427,7 +427,7 @@ export async function agentChat(
       for (const tc of tcs) {
         const r = results.find((r) => r.id === tc.id);
         if (r) {
-          messages.push({ role: 'tool', content: r.result, tool_call_id: tc.id, name: tc.function.name } as any);
+          messages.push({ role: 'tool', content: r.result, tool_call_id: tc.id, name: tc.function.name } as ChatMessage);
         }
       }
       continue;

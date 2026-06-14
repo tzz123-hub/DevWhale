@@ -24,8 +24,8 @@ interface ElectronAPI {
   checkUpdate: () => Promise<{ updateAvailable: boolean }>;
 
   // LSP
-  startLsp: (language: string, command: string, args: string[], projectPath: string) => Promise<{ serverId?: string; capabilities?: any; error?: string }>;
-  lspRequest: (serverId: string, method: string, params: any) => Promise<any>;
+  startLsp: (language: string, command: string, args: string[], projectPath: string) => Promise<{ serverId?: string; capabilities?: Record<string, unknown>; error?: string }>;
+  lspRequest: (serverId: string, method: string, params: Record<string, unknown>) => Promise<unknown>;
   lspDiagnostics: (serverId: string, filePath: string) => Promise<Array<{ line: number; column: number; message: string; severity: string }>>;
   stopLsp: (serverId: string) => Promise<void>;
 
@@ -38,7 +38,7 @@ interface ElectronAPI {
   debugStepInto: (debugId: string) => Promise<void>;
   debugStepOut: (debugId: string) => Promise<void>;
   stopDebug: (debugId: string) => Promise<void>;
-  onDebugEvent: (callback: (event: any) => void) => () => void;
+  onDebugEvent: (callback: (event: Record<string, unknown>) => void) => () => void;
 }
 
 declare global {
