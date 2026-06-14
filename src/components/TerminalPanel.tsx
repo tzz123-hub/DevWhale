@@ -53,9 +53,9 @@ export function TerminalPanel({ cwd, toolLogs = [], liveOutput = '' }: TerminalP
           if (term) term.writeln(text);
         },
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       const term = termRef.current;
-      if (term) term.writeln(`\x1b[1;31m✗ Debug: ${e.message}\x1b[0m`);
+      if (term) term.writeln(`\x1b[1;31m✗ Debug: ${e instanceof Error ? e.message : String(e)}\x1b[0m`);
     }
   };
 
@@ -128,8 +128,8 @@ export function TerminalPanel({ cwd, toolLogs = [], liveOutput = '' }: TerminalP
           term.writeln(line.replace(/\r/g, ''));
         }
       }
-    } catch (e: any) {
-      term.writeln(`\x1b[1;31m✗ ${e.message || '执行失败'}\x1b[0m`);
+    } catch (e: unknown) {
+      term.writeln(`\x1b[1;31m✗ ${e instanceof Error ? e.message : '执行失败'}\x1b[0m`);
     }
 
     term.writeln('');

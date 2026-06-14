@@ -185,7 +185,7 @@ export function CodeViewer({
           };
         },
         freeInlineCompletions: () => {},
-      } as any);
+      } as Parameters<typeof monaco.languages.registerInlineCompletionsProvider>[1]);
     }
   };
 
@@ -259,7 +259,7 @@ export function CodeViewer({
         if (ed && path) {
           try {
             await onSaveFile(path, ed.getValue());
-          } catch (e: any) {
+          } catch (e: unknown) {
             console.error('Save failed:', e);
           }
         }

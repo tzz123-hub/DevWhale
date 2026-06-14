@@ -223,7 +223,7 @@ export function MessageBubble({ message, onRegenerate, onRetry, onDelete }: Mess
 }
 
 /* ====== 代码块组件（语言标签 + 复制按钮） ====== */
-function CodeBlock({ className, children, codeTheme, ...props }: any) {
+function CodeBlock({ className, children, codeTheme, ...props }: Record<string, unknown>) {
   const [copied, setCopied] = useState(false);
   const [running, setRunning] = useState(false);
   const [output, setOutput] = useState<string | null>(null);

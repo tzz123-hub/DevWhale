@@ -39,7 +39,7 @@ export async function startDebug(
   cwd: string,
   callbacks: DebugCallbacks
 ): Promise<string> {
-  const api = (window as any).electronAPI;
+  const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
   if (!api?.startDebug) throw new Error('调试器不可用');
 
   const debugId = `debug-${Date.now()}`;
@@ -59,7 +59,7 @@ export async function startDebug(
   try {
     await api.startDebug(debugId, scriptPath, cwd);
     return debugId;
-  } catch (e: any) {
+  } catch (e: unknown) {
     sessions.delete(debugId);
     currentSessionId = null;
     throw e;
@@ -76,7 +76,7 @@ export async function setBreakpoint(file: string, line: number): Promise<void> {
   // 避免重复
   if (session.state.breakpoints.some((bp) => bp.file === file && bp.line === line)) return;
 
-  const api = (window as any).electronAPI;
+  const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
   if (api?.debugSetBreakpoint) {
     await api.debugSetBreakpoint(session.debugId, file, line);
   }
@@ -92,7 +92,7 @@ export async function removeBreakpoint(file: string, line: number): Promise<void
   const session = getCurrentSession();
   if (!session) return;
 
-  const api = (window as any).electronAPI;
+  const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
   if (api?.debugRemoveBreakpoint) {
     await api.debugRemoveBreakpoint(session.debugId, file, line);
   }
@@ -110,7 +110,7 @@ export async function debugContinue(): Promise<void> {
   const session = getCurrentSession();
   if (!session) return;
 
-  const api = (window as any).electronAPI;
+  const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
   if (api?.debugContinue) {
     await api.debugContinue(session.debugId);
   }
@@ -127,7 +127,7 @@ export async function debugStepOver(): Promise<void> {
   const session = getCurrentSession();
   if (!session) return;
 
-  const api = (window as any).electronAPI;
+  const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
   if (api?.debugStepOver) {
     await api.debugStepOver(session.debugId);
   }
@@ -140,7 +140,7 @@ export async function debugStepInto(): Promise<void> {
   const session = getCurrentSession();
   if (!session) return;
 
-  const api = (window as any).electronAPI;
+  const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
   if (api?.debugStepInto) {
     await api.debugStepInto(session.debugId);
   }
@@ -153,7 +153,7 @@ export async function debugStepOut(): Promise<void> {
   const session = getCurrentSession();
   if (!session) return;
 
-  const api = (window as any).electronAPI;
+  const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
   if (api?.debugStepOut) {
     await api.debugStepOut(session.debugId);
   }
@@ -166,7 +166,7 @@ export async function stopDebug(): Promise<void> {
   const session = getCurrentSession();
   if (!session) return;
 
-  const api = (window as any).electronAPI;
+  const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
   if (api?.stopDebug) {
     await api.stopDebug(session.debugId);
   }
@@ -179,10 +179,10 @@ export async function stopDebug(): Promise<void> {
  * 监听调试器事件（由 Electron 主进程通过 IPC 推送）
  */
 export function setupDebugListener(callbacks: DebugCallbacks): () => void {
-  const api = (window as any).electronAPI;
+  const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
   if (!api?.onDebugEvent) return () => {};
 
-  const cleanup = api.onDebugEvent((event: any) => {
+  const cleanup = api.onDebugEvent((event: Record<string, unknown>) => {
     const session = currentSessionId ? sessions.get(currentSessionId) : null;
     if (!session) return;
 

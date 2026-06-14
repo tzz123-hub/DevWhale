@@ -99,10 +99,10 @@ export function ChatArea({ messages, mode, onModeChange, onSend, isStreaming, on
   const processFiles = useCallback(async (files: File[]) => {
     if (files.length === 0) return;
     const newDropped: DroppedFile[] = [];
-    const api = (window as any).electronAPI;
+    const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
     for (const file of files) {
       const isImg = file.type.startsWith('image/') || isImageExt(file.name);
-      const fp = (file as any).path || file.name;
+      const fp = (file as { path?: string; name: string }).path || file.name;
       let content = '';
       let imageBase64: string | undefined;
       let imageMime: string | undefined;
@@ -154,7 +154,7 @@ export function ChatArea({ messages, mode, onModeChange, onSend, isStreaming, on
   /** 加号按钮 → 弹出菜单 → 选择图片/文件 → 原生对话框 */
   const handleAddFiles = useCallback(async (filterType: 'image' | 'code') => {
     setShowFileMenu(false);
-    const api = (window as any).electronAPI;
+    const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
     if (api?.openFileDialog && api?.readBinaryFile) {
       // === Electron：原生文件对话框 ===
       const paths: string[] | null = await api.openFileDialog(filterType);

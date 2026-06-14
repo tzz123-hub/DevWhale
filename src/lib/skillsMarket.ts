@@ -88,7 +88,7 @@ export async function searchSkillsMP(
     if (!data.success || !data.data?.skills) return { skills: [], total: 0 };
 
     return {
-      skills: data.data.skills.map((s: any) => ({
+      skills: data.data.skills.map((s: Record<string, unknown>) => ({
         id: s.id,
         name: s.name,
         author: s.author,

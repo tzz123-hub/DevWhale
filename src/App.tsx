@@ -185,7 +185,7 @@ function App() {
   // 动态获取项目路径（Electron 模式下用 documentDir）
   useEffect(() => {
     if (!isTauri()) return;
-    const api = (window as any).electronAPI;
+    const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
     if (api?.getDocumentDir) {
       api.getDocumentDir().then((dir: string) => {
         const clean = dir.replace(/[/\\]$/, '');
@@ -386,7 +386,7 @@ function App() {
             controller.signal,
             images,
           );
-        } catch (e: any) {
+        } catch (e: unknown) {
           console.error('agentChat 崩溃:', e);
           setIsStreaming(false);
           setTerminalOutputCallback(null);
@@ -487,7 +487,7 @@ function App() {
   };
 
   const handleOpenFolder = async () => {
-    const api = (window as any).electronAPI;
+    const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
     if (api?.openFolderDialog) {
       try {
         const selected = await api.openFolderDialog();
@@ -505,7 +505,7 @@ function App() {
           });
           setActiveProjectId(finalId);
         }
-      } catch (e: any) { console.error('打开文件夹失败:', e); }
+      } catch (e: unknown) { console.error('打开文件夹失败:', e); }
     } else {
       // 浏览器模式：模拟
       const p = prompt('输入项目文件夹路径:') || '';
@@ -530,7 +530,7 @@ function App() {
     }
     // 新打开：优先从磁盘真实读取
     let content = '';
-    const api = (window as any).electronAPI;
+    const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI;
     if (api?.readFile && projectPath) {
       const fullPath = path.startsWith('/') || /^[A-Za-z]:[/\\]/.test(path)
         ? path

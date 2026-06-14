@@ -1019,8 +1019,8 @@ function McpSettings() {
                         setRunningIds((prev) => new Set(prev).add(s.id));
                         setToolInfos((prev) => ({ ...prev, [s.id]: tools.map(t => ({ name: t.name, description: t.description })) }));
                         if (tools.length === 0) setMcpErrors((prev) => ({ ...prev, [s.id]: '无可用工具' }));
-                      } catch (e: any) {
-                        setMcpErrors((prev) => ({ ...prev, [s.id]: e.message }));
+                      } catch (e: unknown) {
+                        setMcpErrors((prev) => ({ ...prev, [s.id]: e instanceof Error ? e.message : String(e) }));
                       } finally {
                         setStartingIds((prev) => { const n = new Set(prev); n.delete(s.id); return n; });
                       }

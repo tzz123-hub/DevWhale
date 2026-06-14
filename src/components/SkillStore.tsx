@@ -59,7 +59,7 @@ export function SkillStore() {
         saveEnabledSkills(next);
         return next;
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('安装失败:', e);
     } finally {
       setInstalling(null);
@@ -87,7 +87,7 @@ export function SkillStore() {
     try {
       const results = await searchAllSources(searchQuery.trim());
       setSearchResults(results);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('搜索失败:', e);
     } finally {
       setSearching(false);
