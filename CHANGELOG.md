@@ -1,5 +1,55 @@
 # DevWhale 变更日志
 
+## [2026-06-14] 代码质量 + 类型安全 + 循环工程接入
+
+### 严重 Bug 修复
+- **S1: MessageBubble.tsx 条件 Hook 违反 React 规则**: 第 285-287 行的 `useState` 在 early return 之后调用，在行内代码或 diff 视图场景下会导致运行时崩溃。修复：将 `applying`/`applied`/`applyError` 三个 Hook 移至组件顶部。
+- **DevWhale 启动失败**: `app.asar` 中 JS 文件名哈希与 `dist/` 不一致，导致窗口渲染空白。修复：重新 `vite build` + `electron-builder` 同步 asar。
+
+### 代码质量修复（18 项）
+- **空 catch 块**: `App.tsx`、`MessageBubble.tsx`、`tools.ts`、`storage.ts` 共 6 处空 catch 块添加注释说明跳过原因
+- **catch 块类型安全**: `MessageBubble.tsx`、`tools.ts` 共 7 处 `catch (e: any)` 改为 `catch (e: unknown)` + `instanceof Error` 检查
+- **prefer-const + 未使用变量**: `tools.ts` 的 `results`/`title` 改为 `const`；移除死代码 `oldIdx` 变量
+- **删除未使用脚本**: `convert_to_ico.cjs`、`convert_to_ico.py`
+
+### 全项目 any 类型消除（14 文件清零）
+消除所有 `@typescript-eslint/no-explicit-any` 违规：
+- `src/types/electron.d.ts`（4 处）
+- `src/lib/api.ts`（10 处）
+- `src/lib/tools.ts`（12 处）
+- `src/lib/mcp.ts`（8 处）
+- `src/lib/debugger.ts`（9 处 `window as any` → 类型断言 + `onDebugEvent` 回调类型）
+- `src/lib/skillsMarket.ts`（1 处）
+- `src/lib/shell.ts`（已清零）
+- `src/lib/tauriFs.ts`（已清零）
+- `src/lib/completion.ts`（已清零）
+- `src/App.tsx`（3 处 `window as any`）
+- `src/components/ChatArea.tsx`（3 处）
+- `src/components/CodeViewer.tsx`（2 处 + Monaco 类型断言）
+- `src/components/MessageBubble.tsx`（1 处）
+- `src/components/SettingsPanel.tsx`（1 处）
+- `src/components/TerminalPanel.tsx`（2 处）
+- `src/components/SkillStore.tsx`（2 处）
+
+### ESLint 改善
+- 全项目：**139 → 53 错误（-86，-62%）**
+- TypeScript 类型检查：持续 0 错误
+- 测试：343/343 持续通过
+
+### Loop Engineering 循环工程接入
+- 接入 [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering) 框架
+- 新增 `.codewhale/skills/loop-triage/SKILL.md` — CodeWhale 版循环分诊技能（中文）
+- 新增 `.codewhale/skills/loop-budget/SKILL.md` — CodeWhale 版预算守卫（中文）
+- 新增 `STATE.md` — 循环状态文件
+- 新增 `LOOP.md` — 循环描述
+- 新增 `loop-budget.md` — Token 预算控制
+- 新增 `loop-run-log.md` — 运行日志
+
+### 技术文档
+- 技术文档记录于 `CHANGELOG.md`（本文件）
+
+---
+
 ## [2026-06-11] Bug 修复：Shell 编码 + 平台检测
 
 ### Shell 编码修复
