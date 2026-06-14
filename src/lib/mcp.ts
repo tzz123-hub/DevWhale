@@ -16,7 +16,7 @@ export interface McpServerConfig {
 export interface McpTool {
   name: string;
   description: string;
-  inputSchema: Record<string, any>;
+  inputSchema: Record<string, unknown>;
 }
 
 /* ====== MCP 客户端会话 ====== */
@@ -34,7 +34,7 @@ const sessions = new Map<string, McpSession>();
  * 主进程会自动完成 initialize → tools/list 握手。
  */
 export async function startMcpServer(config: McpServerConfig): Promise<{ tools: McpTool[]; serverId: string }> {
-  const api = (window as any).electronAPI;
+  const api = (window as unknown as { electronAPI?: { startMcp?: (...args: unknown[]) => Promise<{ serverId: string; tools?: McpTool[]; error?: string }>; mcpRequest?: (...args: unknown[]) => Promise<Record<string, unknown> | undefined>; stopMcp?: (...args: unknown[]) => Promise<void> } }).electronAPI;
   if (!api?.startMcp) {
     throw new Error('MCP 仅在 Electron 桌面模式下可用');
   }
@@ -70,13 +70,13 @@ export async function startMcpServer(config: McpServerConfig): Promise<{ tools: 
 export async function callMcpTool(
   serverId: string,
   toolName: string,
-  args: Record<string, any>
+  args: Record<string, unknown>
 ): Promise<string> {
   const session = sessions.get(serverId);
   if (!session) throw new Error('MCP 服务器 ' + serverId + ' 未启动');
 
-  const api = (window as any).electronAPI;
-  const result = await api.mcpRequest(serverId, 'tools/call', {
+  const api = (window as unknown as { electronAPI?: { mcpRequest?: (...args: unknown[]) => Promise<Record<string, unknown> | undefined> } }).electronAPI;
+  const result = await api?.mcpRequest?.(serverId, 'tools/call', {
     name: toolName,
     arguments: args,
   });
@@ -85,10 +85,10 @@ export async function callMcpTool(
   if (result.error) throw new Error('MCP 工具失败: ' + result.error);
 
   // MCP tools/call 返回格式: { result: { content: [{ type, text }] } }
-  const content: Array<Record<string, any>> = result.result?.content || [];
+  const content: Array<Record<string, unknown>> = (result.result as Record<string, unknown>)?.content as Array<Record<string, unknown>> || [];
   const textParts = content
-    .filter((c: any) => c.type === 'text')
-    .map((c: any) => c.text);
+    .filter((c): c is { type: string; text: string } => typeof c.type === 'string' && c.type === 'text')
+    .map((c) => c.text);
   return textParts.join('\n') || JSON.stringify(result.result || {});
 }
 
@@ -97,7 +97,7 @@ export async function callMcpTool(
  */
 export async function stopMcpServer(serverId: string): Promise<void> {
   sessions.delete(serverId);
-  const api = (window as any).electronAPI;
+  const api = (window as unknown as { electronAPI?: { stopMcp?: (...args: unknown[]) => Promise<void> } }).electronAPI;
   if (api?.stopMcp) {
     await api.stopMcp(serverId);
   }

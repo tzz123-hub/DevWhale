@@ -62,7 +62,7 @@ async function tauriWrite(path: string, content: string): Promise<string> {
 
   if (isTauri()) {
     try { return await writeFileContent(fullPath, content); }
-    catch (shellErr: any) {
+    catch (shellErr: unknown) {
       // shell 失败时尝试 fs 插件
       try { await writeTextFile(fullPath, content); return `文件写入成功（fs 插件）: ${fullPath}`; }
       catch { return `【失败】${shellErr.message || shellErr}`; }
@@ -91,8 +91,8 @@ async function tauriEdit(path: string, search: string, replace: string): Promise
     }
     const modified = original.replaceAll(search, replace);
     return await tauriWrite(path, modified);
-  } catch (e: any) {
-    return `【失败】${e.message || e}`;
+  } catch (e: unknown) {
+    return `【失败】${e instanceof Error ? e.message : String(e)}`;
   }
 }
 
@@ -103,7 +103,7 @@ async function tauriExec(command: string, _cwd?: string): Promise<string> {
     const requestId = `exec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     return new Promise((resolve) => {
       let output = '';
-      const cleanup = api.onStreamData(requestId, (data: any) => {
+      const cleanup = api.onStreamData(requestId, (data: { type?: string; data?: string; code?: number; message?: string }) => {
         if (data.type === 'stdout') {
           output += data.data;
           terminalOutputCallback?.(data.data);
@@ -125,8 +125,8 @@ async function tauriExec(command: string, _cwd?: string): Promise<string> {
   // 非流式模式：传统 execCommand
   try {
     return await execCommand(command);
-  } catch (e: any) {
-    return `【失败】${e.message || e}`;
+  } catch (e: unknown) {
+    return `【失败】${e instanceof Error ? e.message : String(e)}`;
   }
 }
 
@@ -135,8 +135,8 @@ async function tauriListDir(path: string): Promise<string> {
   try {
     const result = await listDirectory(fullPath);
     return result || '(空目录)';
-  } catch (e: any) {
-    return `【失败】${e.message || e}`;
+  } catch (e: unknown) {
+    return `【失败】${e instanceof Error ? e.message : String(e)}`;
   }
 }
 
@@ -194,7 +194,7 @@ ${paragraphs}
     `;
     await execCommand('powershell', ['-NoProfile', '-Command', psZip]);
     return `Word 文档创建成功 (JS回退): ${fullPath}`;
-  } catch (e: any) {
+  } catch (e: unknown) {
     return `【失败】${e instanceof Error ? e.message : String(e)}`;
   }
 }
@@ -239,8 +239,8 @@ async function tauriGitCommit(message: string): Promise<string> {
   try {
     const cwd = currentProjectPath || undefined;
     return await execCommand('git', ['commit', '-m', message], cwd);
-  } catch (e: any) {
-    return `【失败】${e.message || e}`;
+  } catch (e: unknown) {
+    return `【失败】${e instanceof Error ? e.message : String(e)}`;
   }
 }
 
@@ -248,8 +248,8 @@ async function tauriGitBranch(): Promise<string> {
   try {
     const cwd = currentProjectPath || undefined;
     return await execCommand('git', ['branch', '--list'], cwd);
-  } catch (e: any) {
-    return `【失败】${e.message || e}`;
+  } catch (e: unknown) {
+    return `【失败】${e instanceof Error ? e.message : String(e)}`;
   }
 }
 
@@ -339,8 +339,8 @@ async function tauriApplyPatch(patch: string): Promise<string> {
     }
 
     return `补丁已应用到 ${results.length} 个文件:\n${results.join('\n')}`;
-  } catch (e: any) {
-    return `【失败】${e.message || e}`;
+  } catch (e: unknown) {
+    return `【失败】${e instanceof Error ? e.message : String(e)}`;
   }
 }
 
@@ -449,13 +449,13 @@ async function tauriWebFetch(url: string): Promise<string> {
     }
     const text = await resp.text();
     return `网页内容 (${url}):\n\n${text.slice(0, 8000)}`;
-  } catch (e: any) {
-    return `【失败】${e.message || e}`;
+  } catch (e: unknown) {
+    return `【失败】${e instanceof Error ? e.message : String(e)}`;
   }
 }
 
 /** Agent 工具调度器 */
-export async function executeToolCall(name: string, args: any): Promise<string> {
+export async function executeToolCall(name: string, args: Record<string, unknown>): Promise<string> {
   // MCP 工具路由：mcp_<serverId>_<toolName>
   // 通过已注册会话精确匹配 serverId（支持 serverId 含下划线）
   if (name.startsWith('mcp_')) {
@@ -466,8 +466,8 @@ export async function executeToolCall(name: string, args: any): Promise<string> 
         if (name === fullName) {
           try {
             return await callMcpTool(serverId, tool.name, args);
-          } catch (e: any) {
-            return `【失败】MCP：${e.message || e}`;
+          } catch (e: unknown) {
+            return `【失败】MCP：${e instanceof Error ? e.message : String(e)}`;
           }
         }
       }
