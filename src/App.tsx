@@ -538,7 +538,7 @@ function App() {
       try {
         const r = await api.readFile(fullPath);
         if (r.success) content = r.data || '';
-      } catch {}
+      } catch { /* 演示模式：真实文件系统不可用则跳过 */ }
     }
     if (!content) {
       content = DEMO_FILES[path] || '// 文件内容未加载\n// 连接真实项目后可读取';

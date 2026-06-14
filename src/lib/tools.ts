@@ -47,11 +47,11 @@ async function tauriRead(path: string): Promise<string> {
   try {
     const { DEMO_FILES } = await import('../components/CodeViewer');
     if (DEMO_FILES[path]) return DEMO_FILES[path];
-  } catch {}
+  } catch { /* 演示模式：DEMO_FILES 不可用则跳过 */ }
 
   // 最后 fallback：跨平台 shell 读取
   try { return await readFileContent(fullPath); }
-  catch (e: any) { return `【失败】${e.message || e}`; }
+  catch (e: unknown) { return `【失败】${e instanceof Error ? e.message : String(e)}`; }
 }
 
 async function tauriWrite(path: string, content: string): Promise<string> {
@@ -73,7 +73,7 @@ async function tauriWrite(path: string, content: string): Promise<string> {
   try {
     const { DEMO_FILES } = await import('../components/CodeViewer');
     DEMO_FILES[path] = content;
-  } catch {}
+  } catch { /* 演示模式：DEMO_FILES 不可用则跳过 */ }
   return '文件写入成功（演示模式）';
 }
 
@@ -195,7 +195,7 @@ ${paragraphs}
     await execCommand('powershell', ['-NoProfile', '-Command', psZip]);
     return `Word 文档创建成功 (JS回退): ${fullPath}`;
   } catch (e: any) {
-    return `【失败】${e.message || e}`;
+    return `【失败】${e instanceof Error ? e.message : String(e)}`;
   }
 }
 
@@ -205,12 +205,13 @@ async function tauriGitStatus(_path?: string): Promise<string> {
   try {
     const cwd = currentProjectPath || undefined;
     return await execCommand('git', ['status', '--short'], cwd);
-  } catch (e: any) {
+  } catch (e: unknown) {
     // 非 git 仓库或 git 不可用
-    if (e.message?.includes('退出码 128') || e.message?.includes('not a git repository')) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes('退出码 128') || msg.includes('not a git repository')) {
       return '(当前目录不是 Git 仓库 — 运行 git init 初始化)';
     }
-    return `【失败】${e.message || e}`;
+    return `【失败】${msg}`;
   }
 }
 
@@ -220,8 +221,8 @@ async function tauriGitDiff(staged?: boolean): Promise<string> {
     if (staged) args.push('--cached');
     const cwd = currentProjectPath || undefined;
     return await execCommand('git', args, cwd);
-  } catch (e: any) {
-    return `【失败】${e.message || e}`;
+  } catch (e: unknown) {
+    return `【失败】${e instanceof Error ? e.message : String(e)}`;
   }
 }
 
@@ -229,8 +230,8 @@ async function tauriGitLog(count: number = 10): Promise<string> {
   try {
     const cwd = currentProjectPath || undefined;
     return await execCommand('git', ['log', `-${count}`, '--oneline', '--decorate'], cwd);
-  } catch (e: any) {
-    return `【失败】${e.message || e}`;
+  } catch (e: unknown) {
+    return `【失败】${e instanceof Error ? e.message : String(e)}`;
   }
 }
 
@@ -308,16 +309,14 @@ async function tauriApplyPatch(patch: string): Promise<string> {
           hunkBody.push(hl);
         }
 
-        // 应用 hunk
-        let oldIdx = oldStart;
+        // 应用 hunk（offset 由 oldStart 和变形后的 newLines.length 计算）
         const newLines: string[] = [];
 
         for (const hl of hunkBody) {
           if (hl.startsWith(' ')) {
             newLines.push(hl.slice(1));
-            oldIdx++;
           } else if (hl.startsWith('-')) {
-            oldIdx++; // 跳过删除行
+            // 删除行：不加入 newLines，offset 由 oldCount 计算
           } else if (hl.startsWith('+')) {
             newLines.push(hl.slice(1)); // 添加行
           }
@@ -353,7 +352,7 @@ function escapeRegExp(s: string): string {
 
 async function tauriWebSearch(query: string): Promise<string> {
   // 多源搜索 fallback：先试 Bing，失败或结果为空时试 DuckDuckGo Lite（纯 HTML，反爬弱）
-  let results: string[] = [];
+  const results: string[] = [];
 
   // === Bing ===
   try {
@@ -378,7 +377,7 @@ async function tauriWebSearch(query: string): Promise<string> {
         const snippetMatch = block.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
         if (linkMatch) {
           const url = linkMatch[1];
-          let title = linkMatch[2].replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').replace(/\s+/g, ' ').trim();
+          const title = linkMatch[2].replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').replace(/\s+/g, ' ').trim();
           const snippet = snippetMatch ? snippetMatch[1].replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').replace(/\s+/g, ' ').trim() : '';
           if (url && title && !url.includes('go.microsoft.com')) {
             results.push(`**${title}**\n${snippet}\n🔗 ${url}`);

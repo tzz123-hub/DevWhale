@@ -56,7 +56,7 @@ export function loadProjects(): Project[] {
 export function saveProjects(projects: Project[]): void {
   try {
     localStorage.setItem('devwhale-projects', JSON.stringify(projects));
-  } catch {}
+  } catch { /* localStorage 不可用时静默跳过 */ }
 }
 
 /* ====== 用户名 ====== */
@@ -254,7 +254,7 @@ export function loadEnabledSkills(): string[] {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) return parsed;
     }
-  } catch {}
+  } catch { /* localStorage 不可用则使用默认值 */ }
   // 首次使用：默认启用所有内置 skill
   const defaultIds = BUILTIN_SKILLS.map(s => s.id);
   saveEnabledSkills(defaultIds);

@@ -228,6 +228,9 @@ function CodeBlock({ className, children, codeTheme, ...props }: any) {
   const [running, setRunning] = useState(false);
   const [output, setOutput] = useState<string | null>(null);
   const [runError, setRunError] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
   const match = /language-(\w+)/.exec(className || '');
   const language = match ? match[1] : '';
   // 检测 ext:路径 格式（如 tsx:src/App.tsx）
@@ -274,17 +277,13 @@ function CodeBlock({ className, children, codeTheme, ...props }: any) {
       }
       const result = await execCommand(cmd.program, execArgs);
       setOutput(result || '(命令执行成功，无输出)');
-    } catch (e: any) {
-      setOutput(e.message || '执行失败');
+    } catch (e: unknown) {
+      setOutput(e instanceof Error ? e.message : '执行失败');
       setRunError(true);
     } finally {
       setRunning(false);
     }
   };
-
-  const [applying, setApplying] = useState(false);
-  const [applied, setApplied] = useState(false);
-  const [applyError, setApplyError] = useState<string | null>(null);
 
   const handleApply = async () => {
     if (!filePath) return;
@@ -305,12 +304,12 @@ function CodeBlock({ className, children, codeTheme, ...props }: any) {
       try {
         const { DEMO_FILES } = await import('./CodeViewer');
         DEMO_FILES[filePath] = codeText;
-      } catch {}
+      } catch { /* 演示模式：DEMO_FILES 不可用则跳过 */ }
 
       setApplied(true);
       setTimeout(() => setApplied(false), 3000);
-    } catch (e: any) {
-      setApplyError(e.message || '写入失败');
+    } catch (e: unknown) {
+      setApplyError(e instanceof Error ? e.message : '写入失败');
       setTimeout(() => setApplyError(null), 4000);
     } finally {
       setApplying(false);
